@@ -268,8 +268,8 @@ model = UnetModel(number_of_classes, dropout_rate).to(device)
 # Loss and Optimizer of the Model
 criterion = nn.CrossEntropyLoss()
 
-# optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+# optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
 
 
 ### Learning Rate Scheduler ###
