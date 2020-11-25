@@ -29,6 +29,8 @@
     
     Note that: Validation done in the Training Part if wanted
 
+    **** Also -> Train: Overlapsing, Train2: Condition Specific Not Overlaping, Train3: Generic Not Overlaping ****
+
     Note for Loss Function ->  "For a binary classification you could use nn.CrossEntropyLoss() with a logit output of shape [batch_size, 2] 
                                 or nn.BCELoss() with a nn.Sigmoid() in the last layer."
 '''
@@ -45,14 +47,14 @@ from timeit import default_timer as timer
 from PIL import Image
 # from tqdm import tqdm
 
-import torch 
+import torch
 import torch.nn.functional as F
-from torch import nn 
-from torch import optim 
+from torch import nn
+from torch import optim
 from torch.utils.data import Dataset, DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 
-import torchvision 
+import torchvision
 import torchvision.transforms.functional as TF
 from torchvision import transforms
 from torchsummary import summary
@@ -74,9 +76,9 @@ learning_rate = 1e-3      # 1e-3 is OK., 5e-4 also OK. (0.01 -> 0.001 -> 0.0005)
 dropout_rate = 0.0        # 0.2 is nice with big train data
 loss_print_per_epoch = 1  # desired # loss data print per epoch
 number_of_classes = 2     # OK.
-validation_on = True
-scheduler_on = True
-sample_view = False
+validation_on = False
+scheduler_on = False
+sample_view = True
 
 # CUDA for PyTorch
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -84,16 +86,16 @@ torch.backends.cudnn.benchmark = True
 
 # Image Paths
 data_dir = 'dataset'
-train_path = data_dir + '/train2'
-test_path = data_dir + '/test2'
-validation_path = data_dir + '/validation2'
+train_path = data_dir + '/train3'
+test_path = data_dir + '/test3'
+validation_path = data_dir + '/validation3'
 
-# Trained Model Path 
-trained_model_path = 'utils\\model_check2.pt'
+# Trained Model Path
+trained_model_path = 'utils\\model_check3.pt'
 
 
 # Hyperparameter Print
-print(f'Batch Size: {batch_size*2 if batch_extender else batch_size} {"(Artifical Batch)" if batch_extender else ""}')
+print(f'Batch Size: {batch_size*2 if batch_extender else batch_size} {"(Artificial Batch)" if batch_extender else ""}')
 print(f'Learning Rate: {learning_rate}')
 print(f'Dropout  Rate: {dropout_rate}\n')
 
@@ -112,21 +114,25 @@ def plt_images(images, masks):
 
 # Returns the images and masks in the original format
 def undo_preprocess(images, predicts):
-    x=[]
-    y=[]
-    
+    x = []
+    y = []
+
     images = images.cpu().numpy()
     predicts = predicts.cpu().numpy()
 
     for index in range(images.shape[0]):
         image = images[index]
-        image = np.transpose(image, (1, 2, 0))  # Needed to convert c,h,w -> h,w,c
-        image = np.squeeze(image) * 255  # make every pixel 0-1 range than mul. 255 to scale the value
+        # Needed to convert c,h,w -> h,w,c
+        image = np.transpose(image, (1, 2, 0))
+        # make every pixel 0-1 range than mul. 255 to scale the value
+        image = np.squeeze(image) * 255
         x.append(image.astype(np.uint8))
 
         predict = predicts[index]
-        mask_array = np.transpose(predict, (1, 2, 0))  # Needed to convert c,h,w -> h,w,c
-        mask_array = np.argmax(mask_array, axis=2) * 255  # Every pixel has two class grad, so we pick the highest
+        # Needed to convert c,h,w -> h,w,c
+        mask_array = np.transpose(predict, (1, 2, 0))
+        # Every pixel has two class grad, so we pick the highest
+        mask_array = np.argmax(mask_array, axis=2) * 255
         mask_array = mask_array.astype(np.uint8)
         y.append(mask_array)
     return np.array(x), np.array(y)
@@ -137,7 +143,7 @@ def save_output_batch(images, outputs):
     path = os.path.join(os.getcwd(), 'output_batch\\')
     os.makedirs(path, exist_ok=True)
     print(f'You can find samples in \'{path}\'')
-    
+
     for index in range(len(images)):
         image = images[index]
         save_image = Image.fromarray(image)
@@ -148,22 +154,26 @@ def save_output_batch(images, outputs):
         save_mask.save(path + str(index) + '_output.png')
 
 
-numberofForm = 300
+numberofForm = 700
 # Loads the data from the given path
 def load_data(dataset_path):
     forms = []
     masks = []
 
-    form_names = glob.glob('./' + dataset_path + '/form' + '/*.png') # sample path -> './dataset/train/form/*.png'
-    form_names.sort(key=lambda f: int(re.sub('\D', '', f))) # Sorts them as 0,1,2..
+    # sample path -> './dataset/train/form/*.png'
+    form_names = glob.glob('./' + dataset_path + '/form' + '/*.png')
+    # Sorts them as 0,1,2..
+    form_names.sort(key=lambda f: int(re.sub('\D', '', f)))
 
-    mask_names = glob.glob('./' + dataset_path + '/mask' + '/*.png') # sample path -> './dataset/train/mask/*.png'
-    mask_names.sort(key=lambda f: int(re.sub('\D', '', f))) # Sorts them as 0,1,2..
+    # sample path -> './dataset/train/mask/*.png'
+    mask_names = glob.glob('./' + dataset_path + '/mask' + '/*.png')
+    # Sorts them as 0,1,2..
+    mask_names.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     for i, (form_name, mask_name) in enumerate(zip(form_names, mask_names)):
-        
+
         # Added to observe speed of training
-        if dataset_path == train_path and i == numberofForm :
+        if dataset_path == train_path and i == numberofForm:
             break
 
         form = np.asarray(Image.open(form_name))
@@ -171,8 +181,7 @@ def load_data(dataset_path):
 
         forms.append(form)
         masks.append(mask)
-        
-    
+
     return np.array(forms), np.array(masks)
 
 
@@ -203,14 +212,34 @@ class FormDS(Dataset):
                 image = TF.vflip(image)
                 mask = TF.vflip(mask)
             
-            # # Resize
-            # resize = transforms.Resize(size=(264, 264))
+            # Random rotation on clockwise or anticlockwise
+            if random.random() > 0.5:
+                rotate_direction = [-1, 1] # -1 -> anticlockwise 
+                angle = 90 * random.choice(rotate_direction)
+                image = TF.rotate(image, angle)
+                mask = TF.rotate(mask, angle)
+
+            # # Resize -> Surprisingly decreasing our accuracy!
+            # resize = transforms.Resize(
+            #     size=(312, 312), interpolation=Image.NEAREST)
             # image = resize(image)
             # mask = resize(mask)
-            # # Random Crop 
-            # i, j, h, w = transforms.RandomCrop.get_params(image, output_size=(256, 256))
+            # # Random Crop
+            # i, j, h, w = transforms.RandomCrop.get_params(
+            #     image, output_size=(256, 256))
             # image = TF.crop(image, i, j, h, w)
             # mask = TF.crop(mask, i, j, h, w)
+
+        # # use this in case of observation need
+        # im = np.array(image, dtype='float32')
+        # ma = np.array(mask, dtype=int)
+        # im = im * 255
+        # ma = ma * 255
+
+        # im = Image.fromarray(np.uint8(im))
+        # ma = Image.fromarray(np.uint8(ma))
+        # im.show()
+        # ma.show()
 
         # Swaps color axis because
         # numpy image: H x W x C
@@ -223,12 +252,12 @@ class FormDS(Dataset):
     def __getitem__(self, idx):
         image = self.images[idx]
         image = image.astype(np.float32)
-        image = image / 255 # make pixel values between 0-1
-            
+        image = image / 255  # make pixel values between 0-1
+
         mask = self.masks[idx]
         mask = mask.astype(np.float32)
         mask = mask / 255   # make pixel values 0-1
-        
+
         # make each pixel to have either 0 or 1
         mask[mask > .7] = 1
         mask[mask <= .7] = 0
@@ -258,14 +287,14 @@ print(f'Valid DS Size: {len(validation_dataset)} ({len(validation_data_loader)} 
 
 
 ### Peak a look at the dataset (forms, masks and their combination) ###
-plt_images(train_dataset.images[:batch_size], train_dataset.masks[:batch_size])
+# plt_images(train_dataset.images[:batch_size], train_dataset.masks[:batch_size])
 
 
 # Built Model
 model = UnetModel(number_of_classes, dropout_rate).to(device)
 
 
-# Loss and Optimizer of the Model
+# Loss & Optimizer of the Model
 criterion = nn.CrossEntropyLoss()
 
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -288,16 +317,16 @@ def validation(validation_data_loader, device, criterion, model):
         masks = masks.type(torch.LongTensor)
         masks = masks.reshape(masks.shape[0], masks.shape[2], masks.shape[3])
         masks = masks.to(device)
-        
+
         outputs = model(images)
         val_loss += criterion(outputs, masks).item()
 
         _, predicted = torch.max(outputs.data, 1)
         correct_pixel += (predicted == masks).sum().item()
-        
+
         b, h, w = masks.shape
         batch_total_pixel = b*h*w
-        
+
         total_pixel += batch_total_pixel
 
     acc = correct_pixel/total_pixel
@@ -319,11 +348,11 @@ for epoch in range(epochs):
         masks = masks.type(torch.LongTensor)
         masks = masks.reshape(masks.shape[0], masks.shape[2], masks.shape[3])
         masks = masks.to(device)    # Sends to GPU
-        
+
         # Forward pass
         predicts = model(images)
         loss = criterion(predicts, masks)
-        
+
         # This doubles our batch size
         if batch_extender:
             if batch_step == 0:
@@ -340,7 +369,6 @@ for epoch in range(epochs):
             loss.backward()
             optimizer.step()
 
-        
         if i % int(total_steps/loss_print_per_epoch) == 0:
             if validation_on:
                 acc = 0
@@ -349,7 +377,7 @@ for epoch in range(epochs):
                 with torch.no_grad():
                     validation_loss, validation_accuracy = validation(validation_data_loader, device, criterion, model)
                 model.train()
-            
+
             print(f'Epoch: {epoch + 1}/{epochs}\tStep: {i}/{total_steps}\tLoss: {loss.item():4f}{f"    Valid. Loss: {(validation_loss/len(validation_data_loader)):.4f}    Valid. Acc.: {validation_accuracy * 100:.3f}%" if validation_on else ""} ')
     if scheduler_on:
         scheduler.step(acc)
@@ -373,7 +401,7 @@ model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('
 count = 0
 # Test the model
 model.eval()  # eval mode (batchnorm uses moving mean/variance instead of mini-batch mean/variance)
-with torch.no_grad(): # used for dropout layers
+with torch.no_grad():  # used for dropout layers
     correct_pixel = 0
     total_pixel = 0
     for images, masks in test_data_loader:
@@ -382,13 +410,13 @@ with torch.no_grad(): # used for dropout layers
         # delete color channel to compare direclty with prediction
         masks = masks.reshape(masks.shape[0], masks.shape[2], masks.shape[3])
         masks = masks.to(device)
-        
+
         predicts = model(images)
         _, predicted = torch.max(predicts.data, 1)
         correct_pixel += (predicted == masks).sum().item()
-        
+
         b, h, w = masks.shape
-        batch_total_pixel = b*h*w
+        batch_total_pixel = b * h * w
         total_pixel += batch_total_pixel
 
         # To see random batch prediction uncomment!
@@ -410,24 +438,3 @@ plt_images(images, masks)
 save_output_batch(images, masks)
 
 print("Program Finished!")
-
-
-
-'''
-Notes for ViT:
-
-# from vit_pytorch import ViT
-
-# model = ViT(
-#     image_size = 256,
-#     patch_size = 32,
-#     num_classes = number_of_classes,
-#     channels = 1,
-#     dim = 64,
-#     depth = 6,
-#     heads = 8,
-#     mlp_dim = 128,
-#     dropout = 0.2
-# ).to(device)
-
-'''
