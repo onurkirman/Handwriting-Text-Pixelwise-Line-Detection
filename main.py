@@ -258,7 +258,7 @@ print(f'Valid DS Size: {len(validation_dataset)} ({len(validation_data_loader)} 
 
 
 ### Peak a look at the dataset (forms, masks and their combination) ###
-# plt_images(train_dataset.images[:batch_size], train_dataset.masks[:batch_size])
+plt_images(train_dataset.images[:batch_size], train_dataset.masks[:batch_size])
 
 
 # Built Model
