@@ -29,7 +29,7 @@
     
     Note that: Validation done in the Training Part if wanted
 
-    **** Also -> Train: Overlapsing, Train2: Condition Specific Not Overlaping, Train3: Generic Not Overlaping ****
+    **** Also -> "Train: Overlapsing, Train2: Condition Specific Not Overlaping, Train3: Generic Not Overlaping" ****
 
     Note for Loss Function ->  "For a binary classification you could use nn.CrossEntropyLoss() with a logit output of shape [batch_size, 2] 
                                 or nn.BCELoss() with a nn.Sigmoid() in the last layer."
@@ -45,7 +45,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 from PIL import Image
-# from tqdm import tqdm
 
 import torch
 import torch.nn.functional as F
@@ -72,13 +71,13 @@ print(f'Cuda Available: {torch.cuda.is_available()}\n')
 epochs = 8                # 4 predicts well, might be 2. 8 doesn't affect much ~0.5%
 batch_size = 4            # 4 is OK, might be 8 (exceed mem.)
 batch_extender = True     # Extends the batch so that training process done once in twice -> gives better result
-learning_rate = 1e-3      # 1e-3 is OK., 5e-4 also OK. (0.01 -> 0.001 -> 0.0005) LR Scheduler!
+learning_rate = 1e-2      # 1e-3 is OK., 5e-4 also OK. (0.01 -> 0.001 -> 0.0005) LR Scheduler!
 dropout_rate = 0.0        # 0.2 is nice with big train data
 loss_print_per_epoch = 1  # desired # loss data print per epoch
 number_of_classes = 2     # OK.
-validation_on = False
-scheduler_on = False
-sample_view = True
+validation_on = True
+scheduler_on = True
+sample_view = False
 
 # CUDA for PyTorch
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -100,7 +99,7 @@ print(f'Learning Rate: {learning_rate}')
 print(f'Dropout  Rate: {dropout_rate}\n')
 
 
-# Plots the given batch in 3 rows; Raw, Mask, Anded
+# Plots the given batch in 3 rows; Raw, Mask, Bitwise_Anded
 def plt_images(images, masks):
     fig, axs = plt.subplots(3, batch_size, figsize=(images[0].shape))
 
@@ -154,7 +153,24 @@ def save_output_batch(images, outputs):
         save_mask.save(path + str(index) + '_output.png')
 
 
-numberofForm = 700
+# Saves the given batch in directory
+def save_predictions(images, predictions):
+    path = os.path.join(os.getcwd(), 'predictions\\')
+    os.makedirs(path, exist_ok=True)
+    for index, prediction in enumerate(predictions):
+        save_prediction = Image.fromarray(prediction)
+        save_prediction.save(path + str(index) + '_output.png')
+    
+    for index in range(len(images)):
+        save_image = Image.fromarray(images[index])
+        save_image.save(path + str(index) + '_input.png')
+
+        save_prediction = Image.fromarray(predictions[index])
+        save_prediction.save(path + str(index) + '_output.png')
+    print(f'You can find predictions in \'{path}\'')
+
+
+train_data_size = 984
 # Loads the data from the given path
 def load_data(dataset_path):
     forms = []
@@ -172,8 +188,8 @@ def load_data(dataset_path):
 
     for i, (form_name, mask_name) in enumerate(zip(form_names, mask_names)):
 
-        # Added to observe speed of training
-        if dataset_path == train_path and i == numberofForm:
+        # Added to observe speed of training    -> will be deleted!
+        if dataset_path == train_path and i == train_data_size:
             break
 
         form = np.asarray(Image.open(form_name))
@@ -212,34 +228,34 @@ class FormDS(Dataset):
                 image = TF.vflip(image)
                 mask = TF.vflip(mask)
             
-            # Random rotation on clockwise or anticlockwise
-            if random.random() > 0.5:
-                rotate_direction = [-1, 1] # -1 -> anticlockwise 
-                angle = 90 * random.choice(rotate_direction)
-                image = TF.rotate(image, angle)
-                mask = TF.rotate(mask, angle)
+            # # Random rotation on clockwise or anticlockwise
+            # if random.random() > 0.5:
+            #     rotate_direction = [-1, 1] # -1 -> anticlockwise 
+            #     angle = 90 * random.choice(rotate_direction)
+            #     image = TF.rotate(image, angle)
+            #     mask = TF.rotate(mask, angle)
 
             # # Resize -> Surprisingly decreasing our accuracy!
-            # resize = transforms.Resize(
-            #     size=(312, 312), interpolation=Image.NEAREST)
-            # image = resize(image)
-            # mask = resize(mask)
+            # resize_image = transforms.Resize(size=(312, 312))
+            # resize_mask = transforms.Resize(size=(312, 312), interpolation=Image.NEAREST)
+            # image = resize_image(image)
+            # mask = resize_mask(mask) # -> needs to be exactly 0-1
             # # Random Crop
-            # i, j, h, w = transforms.RandomCrop.get_params(
-            #     image, output_size=(256, 256))
+            # i, j, h, w = transforms.RandomCrop.get_params(image, output_size=(256, 256))
             # image = TF.crop(image, i, j, h, w)
             # mask = TF.crop(mask, i, j, h, w)
 
-        # # use this in case of observation need
+
+        # # use this in case of observation need     -> will be deleted!
         # im = np.array(image, dtype='float32')
         # ma = np.array(mask, dtype=int)
         # im = im * 255
         # ma = ma * 255
-
         # im = Image.fromarray(np.uint8(im))
         # ma = Image.fromarray(np.uint8(ma))
         # im.show()
         # ma.show()
+
 
         # Swaps color axis because
         # numpy image: H x W x C
@@ -258,7 +274,7 @@ class FormDS(Dataset):
         mask = mask.astype(np.float32)
         mask = mask / 255   # make pixel values 0-1
 
-        # make each pixel to have either 0 or 1
+        # make each pixel to have either 0 or 1  -> will be deleted because we used Nearest while scaling
         mask[mask > .7] = 1
         mask[mask <= .7] = 0
 
@@ -377,12 +393,12 @@ for epoch in range(epochs):
                 with torch.no_grad():
                     validation_loss, validation_accuracy = validation(validation_data_loader, device, criterion, model)
                 model.train()
-
-            print(f'Epoch: {epoch + 1}/{epochs}\tStep: {i}/{total_steps}\tLoss: {loss.item():4f}{f"    Valid. Loss: {(validation_loss/len(validation_data_loader)):.4f}    Valid. Acc.: {validation_accuracy * 100:.3f}%" if validation_on else ""} ')
+            valstr = f'\tValid. Loss: {(validation_loss/len(validation_data_loader)):.4f}\tValid. Acc.: {validation_accuracy * 100:.3f}%' if validation_on else ''
+            print(f'Epoch: {epoch + 1}/{epochs}\tStep: {i}/{total_steps}\tLoss: {loss.item():4f}{valstr}')
     if scheduler_on:
-        scheduler.step(acc)
+        scheduler.step(acc) # -> ReduceLROnPlateau
 
-        # scheduler.step()
+        # scheduler.step() # -> StepLR
         # print(f'LR: {scheduler.get_last_lr()}')
 
 print('Execution time:', '{:5.2f}'.format(timer() - start_time), 'seconds')
@@ -398,7 +414,9 @@ model = UnetModel(number_of_classes, dropout_rate).to(device)
 # Load to CPU. Later it can be moved to GPU as needed
 model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('cpu')))
 
-count = 0
+all_forms = []
+all_predictions = []
+view_count = 0
 # Test the model
 model.eval()  # eval mode (batchnorm uses moving mean/variance instead of mini-batch mean/variance)
 with torch.no_grad():  # used for dropout layers
@@ -407,7 +425,7 @@ with torch.no_grad():  # used for dropout layers
     for images, masks in test_data_loader:
         images = images.to(device)
         masks = masks.type(torch.LongTensor)
-        # delete color channel to compare direclty with prediction
+        # delete color channel to compare directly with prediction
         masks = masks.reshape(masks.shape[0], masks.shape[2], masks.shape[3])
         masks = masks.to(device)
 
@@ -418,15 +436,28 @@ with torch.no_grad():  # used for dropout layers
         b, h, w = masks.shape
         batch_total_pixel = b * h * w
         total_pixel += batch_total_pixel
+        
+        # af, ap = undo_preprocess(images, predicts)
+        
+        # all_forms.append(af)
+        # all_predictions.append(ap)
 
         # To see random batch prediction uncomment!
-        if sample_view and count < 10 and random.random() > 0.5:
-            count += 1
+        if sample_view and view_count < 10 and random.random() > 0.5:
+            view_count += 1
             images, masks = undo_preprocess(images, predicts)
             plt_images(images, masks)
 
     print(f"{correct_pixel} / {total_pixel}")
     print(f"Test Accuracy on the model with {len(test_data_loader) * batch_size} images: {100 * correct_pixel / total_pixel:.4f}%")
+
+# all_forms = np.array(all_forms)
+# all_predictions = np.array(all_predictions)
+
+# all_forms = all_forms.reshape(-1, 256, 256)
+# all_predictions = all_predictions.reshape(-1, 256, 256)
+
+# save_predictions(all_forms, all_predictions)
 
 # Gets the images and their predicted masks in normalized
 images, masks = undo_preprocess(images, predicts)
@@ -435,6 +466,6 @@ images, masks = undo_preprocess(images, predicts)
 plt_images(images, masks)
 
 # Saves the last batch as sample as input and output images
-save_output_batch(images, masks)
+# save_output_batch(images, masks)
 
 print("Program Finished!")

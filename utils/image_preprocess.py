@@ -8,6 +8,7 @@
 import os
 import cv2
 import numpy as np
+from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 
@@ -40,8 +41,8 @@ def upscale_image(img, percent):
 
 
 #   Downscaling the given image into given width and height
-def downscale_image(img, width, height, interpolation=cv2.INTER_AREA):
-    resized = cv2.resize(img, (width, height), interpolation=interpolation)
+def downscale_image(img, final_image_size, interpolation=cv2.INTER_AREA):
+    resized = cv2.resize(img, final_image_size, interpolation=interpolation)
     return resized
 
 
@@ -56,52 +57,7 @@ def folder_creator(paths):
         print(error)
 
 
-# Normalizes the given image by first subtracting lowest intensity from all pixels
-# and second multiplying each pixel with 255/(highest-lowest)
-def normalization(image):
-    # Lowest & Highest Intensity Extraction
-    lowest = np.amin(image, axis=(0, 1))
-    highest = np.amax(image, axis=(0, 1))
-
-    for i in range(len(image)):
-        for j in range(len(image[i])):
-            image[i][j] = image[i][j] - lowest
-            image[i][j] = image[i][j] * 255 / (highest - lowest)
-    return image
-
-
-# Denoises the given image
-def denoise_image(image):
-    image = cv2.fastNlMeansDenoising(image, None, 10, 7, 5)  # check the values for threshold
-    return image
-
-
-# Checks the line boxes, if overlaps fixes it by reducing height of the upper line
-def lines_preprocess(lines):
-    margin_factor = 50  # hyperparameter to decide how wide you want the lines are. (45 & 50 gives the best)
-
-    lines = np.array(lines, dtype=int)
-    for i in range(len(lines)-1):
-        
-        upper_line = lines[i]
-        lower_line = lines[i+1]
-
-        ux, uy, uwidth, uheight = upper_line
-        lx, ly, lwidth, lheight = lower_line
-
-        # if not overlaps it will return negative
-        distance = (uy + uheight) - ly
-        
-        # if there exist a margin within the lines with less than needed make it bigger
-        if(distance <= 0 and distance > -margin_factor):
-            shift = -margin_factor - distance
-            lines[i][3] = lines[i][3] + shift  # don't forget to fix on the returned array
-        elif(distance > 0): # if overlaps
-            shift = margin_factor + distance
-            lines[i][3] = lines[i][3] - shift
-        
-    return lines
-
+# Narrows every line box by 0.6 (0.2 from top & 0.4 from bottom) to overcome line box overlaps
 def generic_line_preprocess(lines):
     processed_lines = []
     lines = np.array(lines, dtype=int)
@@ -116,14 +72,14 @@ def generic_line_preprocess(lines):
 
 
 # Preprocess the images in the given file and returns them as np array
-def covert_images(folder_name, d, numIM):
+def covert_images(folder_name, d, final_image_size):
     print("Converting Images...")
     dl = list(d) # gets a list of file names in the raw_data folder
 
     images = []
     masks = []
 
-    for count, filename in enumerate(dl, 0):
+    for filename in tqdm(dl):
         img = cv2.imread(folder_name + filename + '.png', 0)
         img = np.array(img)
 
@@ -132,11 +88,6 @@ def covert_images(folder_name, d, numIM):
 
 
         lines = d[filename]
-
-        # TODO this function needs to be generalized. current one is case specific right now and can't be generalized!!
-        # Checks the lines beforehand, and if overlaps makes it narrower for the upper line
-        # lines = lines_preprocess(lines)
-
         lines = generic_line_preprocess(lines)
 
         for line in lines:
@@ -148,44 +99,25 @@ def covert_images(folder_name, d, numIM):
 
         # cropping image from top and bottom parts by 500 pixel to make square downscale readable
         img = img[500:-500, :]
-        img = downscale_image(img, 256, 256)
-        
-        # winname = 'image'
-        # cv2.namedWindow(winname)        
-        # cv2.moveWindow(winname, 400,100)  
-        # cv2.imshow(winname, img)
-
-        # img = denoise_image(img)
-        # img = normalization(img)
-
-        # winname = 'imageN'
-        # cv2.imshow(winname, img)
-        # cv2.moveWindow(winname, 656,100)
-        # cv2.waitKey(5000)
-        # cv2.destroyAllWindows()
-
+        img = downscale_image(img, final_image_size)
         images.append(img)
 
         # cropping mask to match the image
         mask = mask[500:-500, :]
-        mask = downscale_image(mask, 256, 256, interpolation=cv2.INTER_NEAREST)
+        mask = downscale_image(mask, final_image_size, interpolation=cv2.INTER_NEAREST)
         masks.append(mask)
-        count += 1
 
         # winname = 'image'
         # cv2.namedWindow(winname)        
-        # cv2.moveWindow(winname, 400,100)  
+        # cv2.moveWindow(winname, 400, 100)  
         # cv2.imshow(winname, img & mask)
         
         # winname = 'imageN'
         # cv2.imshow(winname, mask)
-        # cv2.moveWindow(winname, 410+256,100)
+        # cv2.moveWindow(winname, 410 + final_image_size[0], 100)
         # cv2.waitKey(1000)
         # cv2.destroyAllWindows()
-
-        if count == numIM:
-            break
-        
+    
     return np.array(images), np.array(masks)
 
 
@@ -203,7 +135,7 @@ if __name__ == '__main__':
     raw_data_folder = 'data/forms/' # will be -> 'raw_data/forms/'
 
     # Hyperparameters
-    numIM = 1539 # number of images -> might be deleted later!
+    final_image_size = (256, 256)
     split_percentage = 0.2 # used for data split into two sub-parts
 
     # Gets current working directory
@@ -220,23 +152,22 @@ if __name__ == '__main__':
     parsed_data = parse_line_info()
 
     # returns all image and mask as np array
-    train_images, train_masks = covert_images(raw_data_folder, parsed_data, numIM)
+    train_images, train_masks = covert_images(raw_data_folder, parsed_data, final_image_size)
     
 
     print("Dataset Split Session Started...")
-
     # train_test_split -> we can use the stratification parameters
     # First divide the data into test/train datasets
     train_images, test_images, train_masks, test_masks = train_test_split(train_images, train_masks, test_size = split_percentage)
     
     # Later divide the remaining train dataset into train & validation datasets
     train_images, validation_images, train_masks, validation_masks = train_test_split(train_images, train_masks, test_size = split_percentage)
+    print(train_images.shape[0], test_images.shape[0], validation_images.shape[0]) # length of the datasets 
 
 
     # Creates the folders
-    folder_creator([train_path, test_path, validation_path])
+    # folder_creator([train_path, test_path, validation_path])
 
-    print(train_images.shape[0], test_images.shape[0], validation_images.shape[0]) # length of the datasets 
 
     # # Save all train, test & validation files
     # print("Saving Datasets")
