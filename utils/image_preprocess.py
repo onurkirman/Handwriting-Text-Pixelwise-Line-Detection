@@ -1,5 +1,8 @@
 ''' 
-                    *** Notes before starting ***
+    Onur Kirman S009958 Computer Science Undergrad at Ozyegin University
+
+                                *** Notes Before Starting ***
+    
     In the folder named data, we have; line_info.txt and form folder which 
     contains images with total number of 1539
     

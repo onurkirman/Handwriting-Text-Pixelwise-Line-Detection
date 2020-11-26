@@ -1,7 +1,8 @@
 ''' 
     Onur Kirman S009958 Computer Science Undergrad at Ozyegin University
 
-                                *** Notes before starting ***
+                                *** Notes Before Starting ***
+    
     In the folder named data, we have; line_info.txt and 1539 form images from the IAM Handwriting Database
         - The line_info.txt is the reformatted version (header part deleted version) of lines.txt file
     
