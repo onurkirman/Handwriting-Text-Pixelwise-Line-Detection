@@ -156,7 +156,8 @@ def save_output_batch(images, outputs):
 
 # Saves the given batch in directory
 def save_predictions(images, predictions):
-    path = os.path.join(os.getcwd(), 'predictions\\')
+    path = os.path.join(os.getcwd(), 'output\\')
+    path = os.path.join(path, 'prediction\\')
     os.makedirs(path, exist_ok=True)
     for index, prediction in enumerate(predictions):
         save_prediction = Image.fromarray(prediction)

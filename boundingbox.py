@@ -47,17 +47,18 @@ def bounding_box(image):
 
 
 if __name__ == "__main__":
-    script_name = __file__.split('\\')
-    print(f"\'{script_name[-1]}\' Started!")
+    script_name = __file__.split('/')
+    print(f"\'{script_name[-1].capitalize()}\' Started!")
 
     # folder name for raw form images
-    raw_data_folder = 'predictions/'
+    raw_data_folder = 'output/'
 
-    saving_path = os.path.join(os.getcwd(), 'box_fitted\\')
+    path = os.getcwd() + raw_data_folder
+    saving_path = os.path.join(path, 'box_fitted\\')
     os.makedirs(saving_path, exist_ok=True)
 
 
-    predictions = glob.glob('./' + raw_data_folder + '/*_output.png')
+    predictions = glob.glob('./' + raw_data_folder + 'prediction' + '/*_output.png')
     predictions.sort(key=lambda f: int(re.sub('\D', '', f)))
 
 
