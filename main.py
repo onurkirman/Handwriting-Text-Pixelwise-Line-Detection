@@ -17,13 +17,20 @@
             - train
             - test
             - validation
-        output_batch -> (created at the end of main.py to save the output batch)
+        models
+            - CNN_network.py    -> Simple CNN Model
+            - Unet_model.py     -> Sliced Unet CNN Model
+        output
+            - box_fitted        -> Bounding Box Created Over the Predictions
+            - prediction        -> Predictions/Outputs of the network saved as input-output pairs
+        output_batch -> (created, if requested, at the end of main.py to save the output batch)
         utils
             - image_preprocess.py
-            - lines_segmentation.py
+            ** Add a new script for data allocation with network train & test. Remove the part from the main
+            ** Keep only the requered script runs in main.py -> TODO LATER !! 
         main.py
-        CNN_network.py  -> Simple CNN Model
-        Unet_model.py   -> Unet alike CNN Model
+        
+        
 
     Steps Followed:
     Load Data -> Make Dataset -> Load Dataset -> Built Model -> Train Model -> Validate -> Save Model -> Load Model -> Test Model -> Output Batch 
@@ -59,8 +66,8 @@ import torchvision.transforms.functional as TF
 from torchvision import transforms
 from torchsummary import summary
 
-from Unet_model import UnetModel
-from CNN_network import Network
+from models.Unet_model import UnetModel
+from models.CNN_network import Network
 
 print("Program Started!")
 
