@@ -86,6 +86,7 @@ number_of_classes = 2     # OK.
 validation_on = True
 scheduler_on = True
 sample_view = False
+is_saving_output = False
 
 # CUDA for PyTorch
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -403,7 +404,7 @@ for epoch in range(epochs):
                     validation_loss, validation_accuracy = validation(validation_data_loader, device, criterion, model)
                 model.train()
             valstr = f'\tValid. Loss: {(validation_loss/len(validation_data_loader)):.4f}\tValid. Acc.: {validation_accuracy * 100:.3f}%' if validation_on else ''
-            print(f'Epoch: {epoch + 1}/{epochs}\tStep: {i}/{total_steps}\tLoss: {loss.item():4f}{valstr}')
+            print(f'Epoch: {epoch + 1}/{epochs}\t{i}/{total_steps}\tLast.Loss: {loss.item():4f}{valstr}')
     if scheduler_on:
         scheduler.step(acc) # -> ReduceLROnPlateau
 
@@ -446,12 +447,15 @@ with torch.no_grad():  # used for dropout layers
         batch_total_pixel = b * h * w
         total_pixel += batch_total_pixel
         
-        # af, ap = undo_preprocess(images, predicts)
-        
-        # all_forms.append(af)
-        # all_predictions.append(ap)
 
-        # To see random batch prediction uncomment!
+        # if pre-set addes images to list
+        if is_saving_output:
+            af, ap = undo_preprocess(images, predicts)
+            all_forms.append(af)
+            all_predictions.append(ap)
+
+
+        # To observe random batch prediction uncomment!
         if sample_view and view_count < 10 and random.random() > 0.5:
             view_count += 1
             images, masks = undo_preprocess(images, predicts)
@@ -460,13 +464,16 @@ with torch.no_grad():  # used for dropout layers
     print(f"{correct_pixel} / {total_pixel}")
     print(f"Test Accuracy on the model with {len(test_data_loader) * batch_size} images: {100 * correct_pixel / total_pixel:.4f}%")
 
-# all_forms = np.array(all_forms)
-# all_predictions = np.array(all_predictions)
 
-# all_forms = all_forms.reshape(-1, 256, 256)
-# all_predictions = all_predictions.reshape(-1, 256, 256)
+# Saves the output
+if is_saving_output:
+    all_forms = np.array(all_forms)
+    all_predictions = np.array(all_predictions)
 
-# save_predictions(all_forms, all_predictions)
+    all_forms = all_forms.reshape(-1, 256, 256)
+    all_predictions = all_predictions.reshape(-1, 256, 256)
+
+    save_predictions(all_forms, all_predictions)
 
 # Gets the images and their predicted masks in normalized
 images, masks = undo_preprocess(images, predicts)
