@@ -71,8 +71,8 @@ from models.CNN_network import Network
 
 print("Program Started!")
 
-print(f'Cuda Device Name: {torch.cuda.get_device_name(torch.cuda.current_device())}')
-print(f'Cuda Available: {torch.cuda.is_available()}\n')
+print(f'Cuda Available: {torch.cuda.is_available()}')
+print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
 
 
 # Hyperparameters
