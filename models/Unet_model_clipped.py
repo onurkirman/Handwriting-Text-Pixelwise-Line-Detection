@@ -33,9 +33,9 @@ def concatenate(out1, out2):
     return torch.cat((out1, out2), dim=1)
 
 
-class UnetModel(Module):
+class UnetModelClipped(Module):
     def __init__(self, number_of_classes, dropout_rate):
-        super(UnetModel, self).__init__()
+        super(UnetModelClipped, self).__init__()
 
         self.block1 = conv_block(1, 32, dropout_rate=dropout_rate)
 
@@ -98,5 +98,5 @@ if __name__ == '__main__':
 
     print(f'Number of Classes: {number_of_classes}')
 
-    model = UnetModel(number_of_classes, 0).to(device)
+    model = UnetModelClipped(number_of_classes, 0).to(device)
     summary(model, input_size=(1, 256, 256))  # (channels, H, W)
