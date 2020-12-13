@@ -66,7 +66,8 @@ import torchvision.transforms.functional as TF
 from torchvision import transforms
 from torchsummary import summary
 
-from models.Unet_model_clipped import UnetModel
+from models.Unet_model import UnetModel
+from models.Unet_model_clipped import UnetModelClipped
 from models.CNN_network import Network
 
 print("Program Started!")
@@ -86,7 +87,7 @@ number_of_classes = 2     # OK.
 validation_on = True
 scheduler_on = True
 sample_view = False
-is_saving_output = False
+is_saving_output = True
 
 # CUDA for PyTorch
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -99,8 +100,8 @@ test_path = data_dir + '/test3'
 validation_path = data_dir + '/validation3'
 
 # Trained Model Path
-trained_model_path = 'utils\\model_check3.pt'
-
+trained_model_path = 'weight\\model_check.pt'
+os.makedirs(os.path.join(os.getcwd(), trained_model_path.split("\\")[0]), exist_ok=True)
 
 # Hyperparameter Print
 print(f'Batch Size: {batch_size*2 if batch_extender else batch_size} {"(Artificial Batch)" if batch_extender else ""}')
@@ -404,7 +405,7 @@ for epoch in range(epochs):
                     validation_loss, validation_accuracy = validation(validation_data_loader, device, criterion, model)
                 model.train()
             valstr = f'\tValid. Loss: {(validation_loss/len(validation_data_loader)):.4f}\tValid. Acc.: {validation_accuracy * 100:.3f}%' if validation_on else ''
-            print(f'Epoch: {epoch + 1}/{epochs}\t{i}/{total_steps}\tLast.Loss: {loss.item():4f}{valstr}')
+            print(f'Epoch: {epoch + 1}/{epochs}\tSt:{i}/{total_steps}\tLast.Loss: {loss.item():4f}{valstr}')
     if scheduler_on:
         scheduler.step(acc) # -> ReduceLROnPlateau
 
@@ -451,8 +452,8 @@ with torch.no_grad():  # used for dropout layers
         # if pre-set addes images to list
         if is_saving_output:
             af, ap = undo_preprocess(images, predicts)
-            all_forms.append(af)
-            all_predictions.append(ap)
+            all_forms.extend(af)
+            all_predictions.extend(ap)
 
 
         # To observe random batch prediction uncomment!
@@ -467,13 +468,7 @@ with torch.no_grad():  # used for dropout layers
 
 # Saves the output
 if is_saving_output:
-    all_forms = np.array(all_forms)
-    all_predictions = np.array(all_predictions)
-
-    all_forms = all_forms.reshape(-1, 256, 256)
-    all_predictions = all_predictions.reshape(-1, 256, 256)
-
-    save_predictions(all_forms, all_predictions)
+    save_predictions(np.array(all_forms), np.array(all_predictions))
 
 # Gets the images and their predicted masks in normalized
 images, masks = undo_preprocess(images, predicts)
