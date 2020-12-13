@@ -1,13 +1,19 @@
 '''
+Written by Onur Kirman Computer Science Undergrad at Ozyegin University
+This script is the clipped version of Unet Model referenced.
+Ref: U-Net: Convolutional Networks for Biomedical Image Segmentation [https://arxiv.org/abs/1505.04597]
+
 Notes about network hyperparameters & layers:
 
-- 'MaxPool2d' with (2,2) makes the size half in both dim.
-- 'padding = 1' -> helps to keep the size of our input while conv.(3,3)
+- 'MaxPool2d' with (2,2) shrinks size by half in both dimensions.
+-  UpsamplingNearest2d scale_factor of 2, just doubles the size.
+- 'padding = 1' -> helps to keep the size of our input while conv.(3,3).
 
-- 'Dropout' decreases accuracy
-- 'ReLu' gives better results than 'LeakyReLU'
-- 'BatchNorm' increses accuracy. and helps better understand the neurons to converge
-- 'UpsamplingNearest2d' > 'UpsamplingBilinear2d' in line seperations
+Conclutions over the Tests being done: 
+- 'ReLu' gives better results than 'LeakyReLU'.
+- 'Dropout' decreases accuracy on small datasets, like ours. 
+- 'BatchNorm' increses accuracy. Also, it helps the neurons to better understand and converge.
+- 'UpsamplingNearest2d' is better than 'UpsamplingBilinear2d' in pixelwise line seperations. 
 '''
 
 import torch

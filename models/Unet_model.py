@@ -1,13 +1,18 @@
 '''
+Written by Onur Kirman Computer Science Undergrad at Ozyegin University
+Ref: U-Net: Convolutional Networks for Biomedical Image Segmentation [https://arxiv.org/abs/1505.04597]
+
 Notes about network hyperparameters & layers:
 
-- 'MaxPool2d' with (2,2) makes the size half in both dim.
-- 'padding = 1' -> helps to keep the size of our input while conv.(3,3)
+- 'MaxPool2d' with (2,2) shrinks size by half in both dimensions.
+-  UpsamplingNearest2d scale_factor of 2, just doubles the size.
+- 'padding = 1' -> helps to keep the size of our input while conv.(3,3).
 
-- 'Dropout' decreases accuracy
-- 'ReLu' gives better results than 'LeakyReLU'
-- 'BatchNorm' increses accuracy. and helps better understand the neurons to converge
-- 'UpsamplingNearest2d' > 'UpsamplingBilinear2d' in line seperations
+Conclutions over the Tests being done: 
+- 'ReLu' gives better results than 'LeakyReLU'.
+- 'Dropout' decreases accuracy on small datasets, like ours. 
+- 'BatchNorm' increses accuracy. Also, it helps the neurons to better understand and converge.
+- 'UpsamplingNearest2d' is better than 'UpsamplingBilinear2d' in pixelwise line seperations. 
 '''
 
 import torch
@@ -20,11 +25,11 @@ def conv_block(in_channel: int, out_channel: int, dropout_rate):
     conv_sequence = Sequential(
             Conv2d(in_channel, out_channel, kernel_size=3, padding=1),
             BatchNorm2d(out_channel),
-            ReLU(),
+            ReLU(inplace=True),
             Dropout2d(dropout_rate),
             Conv2d(out_channel, out_channel, kernel_size=3, padding=1),
             BatchNorm2d(out_channel),
-            ReLU()
+            ReLU(inplace=True)
         )
     return conv_sequence
 
@@ -39,35 +44,35 @@ class UnetModel(Module):
 
         self.block1 = conv_block(1, 32, dropout_rate=dropout_rate)
 
-        self.pool1 = MaxPool2d((2, 2))  # shrinks size by half
+        self.pool1 = MaxPool2d((2, 2))
 
         self.block2 = conv_block(32, 64, dropout_rate=dropout_rate)
 
-        self.pool2 = MaxPool2d((2, 2))  # shrinks size by half
+        self.pool2 = MaxPool2d((2, 2))
 
         self.block3 = conv_block(64, 128, dropout_rate=dropout_rate)
 
-        self.pool3 = MaxPool2d((2, 2))  # shrinks size by half
+        self.pool3 = MaxPool2d((2, 2))
 
         self.block4 = conv_block(128, 256, dropout_rate=dropout_rate)
 
-        self.pool4 = MaxPool2d((2, 2))  # shrinks size by half
+        self.pool4 = MaxPool2d((2, 2))
 
-        self.block5 = conv_block(256, 512, dropout_rate=dropout_rate)       # Flat CONV
+        self.block5 = conv_block(256, 512, dropout_rate=dropout_rate)
 
-        self.up1 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
+        self.up1 = UpsamplingNearest2d(scale_factor=2)
 
         self.block6 = conv_block(512 + 256, 256, dropout_rate=dropout_rate)
 
-        self.up2 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
+        self.up2 = UpsamplingNearest2d(scale_factor=2)
 
         self.block7 = conv_block(256 + 128, 128, dropout_rate=dropout_rate)
 
-        self.up3 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
+        self.up3 = UpsamplingNearest2d(scale_factor=2)
 
         self.block8 = conv_block(128 + 64, 64, dropout_rate=dropout_rate)
 
-        self.up4 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
+        self.up4 = UpsamplingNearest2d(scale_factor=2)
 
         self.block9 = conv_block(64 + 32, 32, dropout_rate=dropout_rate)
 
@@ -76,7 +81,7 @@ class UnetModel(Module):
         self.norm2d = BatchNorm2d(number_of_classes)
 
     def forward(self, x):
-        out1 = self.block1(x)
+        out1 = self.block1(x)               # Left Top of U
 
         out_pool1 = self.pool1(out1)
 
@@ -92,7 +97,7 @@ class UnetModel(Module):
 
         out_pool4 = self.pool4(out4)
 
-        out5 = self.block5(out_pool4)   # bottom
+        out5 = self.block5(out_pool4)       # Middle
 
         out_up1 = self.up1(out5)
 
@@ -112,7 +117,7 @@ class UnetModel(Module):
         out_up4 = self.up4(out8)
 
         out9 = concatenate(out_up4, out1)
-        out9 = self.block9(out9)
+        out9 = self.block9(out9)            # Left Top of U
 
 
         out10 = self.conv2d(out9)

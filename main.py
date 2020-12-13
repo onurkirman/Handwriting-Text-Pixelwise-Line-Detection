@@ -35,7 +35,7 @@
         
 
     Steps Followed:
-    Load Data -> Make Dataset -> Load Dataset -> Built Model -> Train Model -> Validate -> Save Model -> Load Model -> Test Model -> Output Batch 
+    Load Data -> Make Dataset -> Load Dataset -> Built Model -> Train Model -> Validate -> Save Model -> Load Model -> Test Model -> Output/View 
     
     Note that: Validation done in the Training Part if wanted
 
