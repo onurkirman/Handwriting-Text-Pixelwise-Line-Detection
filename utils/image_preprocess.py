@@ -68,8 +68,8 @@ def generic_line_preprocess(lines):
     for line in lines:
         x, y, width, height = line
         width_constant = round(height * 0.1)
-        y = y + width_constant * 2
-        height = height - width_constant * 4
+        y = y + width_constant * 3
+        height = height - width_constant * 6
         processed_lines.append([x, int(y), width, int(height)])
     return np.array(processed_lines)
 
@@ -88,14 +88,21 @@ def covert_images(folder_name, d, final_image_size):
 
         height, width = img.shape
         mask = np.zeros((height, width), dtype='uint8')
+        mask2 = np.zeros((height, width), dtype='uint8')
 
 
         lines = d[filename]
+        lines2 = np.array(lines, dtype=int)
+        
         lines = generic_line_preprocess(lines)
 
         for line in lines:
             x, y, width, height = line
             mask[y:y+height, x:x+width] = 255
+
+        for line in lines2:
+            x, y, width, height = line
+            mask2[y:y+height, x:x+width] = 255
         
         # removes the unwanted writer name part at the end
         img[y+height:, 100:-100] = img.mean() + 5 if img.mean() < 251 else 255
@@ -109,6 +116,10 @@ def covert_images(folder_name, d, final_image_size):
         mask = mask[500:-500, :]
         mask = downscale_image(mask, final_image_size, interpolation=cv2.INTER_NEAREST)
         masks.append(mask)
+        
+        # cropping mask to match the image
+        mask2 = mask2[500:-500, :]
+        mask2 = downscale_image(mask2, final_image_size, interpolation=cv2.INTER_NEAREST)
 
         # winname = 'image'
         # cv2.namedWindow(winname)        
@@ -118,6 +129,11 @@ def covert_images(folder_name, d, final_image_size):
         # winname = 'imageN'
         # cv2.imshow(winname, mask)
         # cv2.moveWindow(winname, 410 + final_image_size[0], 100)
+        
+        # winname = 'image_No_Process'
+        # cv2.namedWindow(winname)        
+        # cv2.imshow(winname, mask2)
+        # cv2.moveWindow(winname, 420 + final_image_size[0] * 2, 100)  
         # cv2.waitKey(1000)
         # cv2.destroyAllWindows()
     
@@ -146,9 +162,9 @@ if __name__ == '__main__':
     
     # Paths for folders
     dataset_path = '\\dataset'
-    train_path = os.path.join(path + dataset_path, 'train3')
-    test_path = os.path.join(path + dataset_path, 'test3')
-    validation_path = os.path.join(path + dataset_path, 'validation3')
+    train_path = os.path.join(path + dataset_path, '4_train')
+    test_path = os.path.join(path + dataset_path, '4_test')
+    validation_path = os.path.join(path + dataset_path, '4_validation')
     
 
     # we have file name and lines in the corres. image
@@ -169,13 +185,13 @@ if __name__ == '__main__':
 
 
     # Creates the folders
-    # folder_creator([train_path, test_path, validation_path])
+    folder_creator([train_path, test_path, validation_path])
 
 
-    # # Save all train, test & validation files
-    # print("Saving Datasets")
-    # save_files(train_images, train_masks, train_path)
-    # save_files(test_images, test_masks, test_path)
-    # save_files(validation_images, validation_masks, validation_path)
+    # Save all train, test & validation files
+    print("Saving Datasets")
+    save_files(train_images, train_masks, train_path)
+    save_files(test_images, test_masks, test_path)
+    save_files(validation_images, validation_masks, validation_path)
 
     print("Program Finished!")
