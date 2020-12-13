@@ -28,6 +28,8 @@
             - image_preprocess.py
             ** Add a new script for data allocation with network train & test. Remove the part from the main
             ** Keep only the requered script runs in main.py -> TODO LATER !! 
+        weight
+            - model_check.pt    -> checkpoint of the model used.
         main.py
         
         
