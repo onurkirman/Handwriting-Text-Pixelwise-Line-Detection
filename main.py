@@ -18,8 +18,8 @@
             - test
             - validation
         models
-            - CNN_network.py    -> Simple CNN Model
-            - Unet_model.py     -> Sliced Unet CNN Model
+            - CNN_network.py            -> Simple CNN Model
+            - Unet_model_clipped.py     -> Sliced Unet CNN Model
         output
             - box_fitted        -> Bounding Box Created Over the Predictions
             - prediction        -> Predictions/Outputs of the network saved as input-output pairs
@@ -66,7 +66,7 @@ import torchvision.transforms.functional as TF
 from torchvision import transforms
 from torchsummary import summary
 
-from models.Unet_model import UnetModel
+from models.Unet_model_clipped import UnetModel
 from models.CNN_network import Network
 
 print("Program Started!")

@@ -47,29 +47,13 @@ class UnetModel(Module):
 
         self.block3 = conv_block(64, 128, dropout_rate=dropout_rate)
 
-        self.pool3 = MaxPool2d((2, 2))  # shrinks size by half
-
-        self.block4 = conv_block(128, 256, dropout_rate=dropout_rate)
-
-        self.pool4 = MaxPool2d((2, 2))  # shrinks size by half
-
-        self.block5 = conv_block(256, 512, dropout_rate=dropout_rate)       # Flat CONV
-
         self.up1 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
 
-        self.block6 = conv_block(512 + 256, 256, dropout_rate=dropout_rate)
+        self.block4 = conv_block(128 + 64, 64, dropout_rate=dropout_rate)
 
         self.up2 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
 
-        self.block7 = conv_block(256 + 128, 128, dropout_rate=dropout_rate)
-
-        self.up3 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
-
-        self.block8 = conv_block(128 + 64, 64, dropout_rate=dropout_rate)
-
-        self.up4 = UpsamplingNearest2d(scale_factor=2)  # doubles the size
-
-        self.block9 = conv_block(64 + 32, 32, dropout_rate=dropout_rate)
+        self.block5 = conv_block(64 + 32, 32, dropout_rate=dropout_rate)
 
         # Single conv to #class
         self.conv2d = Conv2d(32, number_of_classes, kernel_size=1)
@@ -86,38 +70,19 @@ class UnetModel(Module):
 
         out3 = self.block3(out_pool2)
 
-        out_pool3 = self.pool3(out3)
+        out_up1 = self.up1(out3)
 
-        out4 = self.block4(out_pool3)
+        out4 = concatenate(out_up1, out2)
+        out4 = self.block4(out4)
 
-        out_pool4 = self.pool4(out4)
+        out_up2 = self.up2(out4)
 
-        out5 = self.block5(out_pool4)   # bottom
+        out5 = concatenate(out_up2, out1)
+        out5 = self.block5(out5)
 
-        out_up1 = self.up1(out5)
+        out6 = self.conv2d(out5)
 
-        out6 = concatenate(out_up1, out4)
-        out6 = self.block6(out6)
-
-        out_up2 = self.up2(out6)
-
-        out7 = concatenate(out_up2, out3)
-        out7 = self.block7(out7)
-
-        out_up3 = self.up3(out7)
-
-        out8 = concatenate(out_up3, out2)
-        out8 = self.block8(out8)
-
-        out_up4 = self.up4(out8)
-
-        out9 = concatenate(out_up4, out1)
-        out9 = self.block9(out9)
-
-
-        out10 = self.conv2d(out9)
-
-        y_pred = self.norm2d(out10)
+        y_pred = self.norm2d(out6)
 
         return y_pred
 
