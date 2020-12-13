@@ -53,7 +53,7 @@ if __name__ == "__main__":
     # folder name for raw form images
     raw_data_folder = 'output/'
 
-    path = os.getcwd() + raw_data_folder
+    path = os.path.join(os.getcwd(), raw_data_folder)
     saving_path = os.path.join(path, 'box_fitted\\')
     os.makedirs(saving_path, exist_ok=True)
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         # cv2.waitKey(2000)
         # cv2.destroyAllWindows()
 
-        # cv2.imwrite(os.path.join(saving_path, str(i) + '.png'), box_fitted)
+        cv2.imwrite(os.path.join(saving_path, str(i) + '.png'), box_fitted)
 
 
     print("Program Finished!")
