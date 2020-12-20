@@ -20,41 +20,7 @@ from tqdm import tqdm
 
 # Finds the white ares using their pixel values 
 # Later, puts every area into bounding-box rectangle that fits those pixels
-def bounding_box(image):
-    image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    b, g, r = cv2.split(image_hsv)
-
-    # First creating a mask that has the white area pixels
-    mask = cv2.inRange(r, 255, 255)
-
-    # Secondly extracting the corresponding part from the original image
-    blob = cv2.bitwise_and(image, image, mask=mask)
-
-    # Later finding contours to particular image using the following hyperparameters
-    # We do not care about the hierarchy so discard that part
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Looping over the contours and bound them with a rectangle
-    # Later drawing the box masked region to our mask by taking x & y of top left and bottom right coordinates
-    for i, contour in enumerate(contours):
-        bbox = cv2.boundingRect(contour)
-        # Create a mask for this contour
-        contour_mask = np.zeros_like(mask)
-        # cv2.drawContours(contour_mask, contours, i, 255, -1)
-
-        # Extract the pixels belonging to this contour
-        result = cv2.bitwise_and(blob, blob, mask=contour_mask)
-        # And draw a bounding box
-        top_left, bottom_right = (bbox[0], bbox[1]), (bbox[0]+bbox[2], bbox[1]+bbox[3])
-        cv2.rectangle(mask, top_left, bottom_right, (255, 255, 255), -1)
-    return mask
-
-
-# Works same as bounding-box but does mix the input with bb-rectangle
-def bb_rectangle(input, prediction):
-
-    # input = cv2.cvtColor(input, cv2.COLOR_GRAY2RGB)
-
+def bounding_box(input, prediction, draw_rect=False):
     image_hsv = cv2.cvtColor(prediction, cv2.COLOR_BGR2HSV)
     b, g, r = cv2.split(image_hsv)
 
@@ -68,37 +34,25 @@ def bb_rectangle(input, prediction):
     # We do not care about the hierarchy so discard that part
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # colors for visualization
-    colors = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
-              [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]] 
-    
-    for c in range(len(colors)):
-        for i in range(len(colors[c])):
-            colors[c][i] = int(colors[c][i] * 255)
-
-    # # colors = round(colors)
-    # colors = list(map(round, colors))
-
-    # colors = np.array(colors * 100, dtype=int)
-
     # Looping over the contours and bound them with a rectangle
     # Later drawing the box masked region to our mask by taking x & y of top left and bottom right coordinates
     for contour in contours:
         bbox = cv2.boundingRect(contour)
-
         # Create a mask for this contour
         contour_mask = np.zeros_like(mask)
+        # cv2.drawContours(contour_mask, contours, i, 255, -1)
 
         # Extract the pixels belonging to this contour
         result = cv2.bitwise_and(blob, blob, mask=contour_mask)
         # And draw a bounding box
         top_left, bottom_right = (bbox[0], bbox[1]), (bbox[0]+bbox[2], bbox[1]+bbox[3])
+        cv2.rectangle(mask, top_left, bottom_right, (255, 255, 255), -1)
+        
+        if draw_rect:
+            color = tuple((int(random.random()*200),int(random.random()*200),int(random.random()*180)))
+            cv2.rectangle(input, top_left, bottom_right, color, 2)
+    return input, mask
 
-        color = tuple((int(random.random()*200),int(random.random()*200),int(random.random()*180)))
-        # color = (255,30,0)
-        cv2.rectangle(input, top_left, bottom_right, color, 2)
-
-    return input
 
 if __name__ == "__main__":
     script_name = __file__.split('/')
@@ -121,9 +75,13 @@ if __name__ == "__main__":
     inputs = glob.glob('./' + raw_data_folder + 'prediction' + '/*_input.png')
     inputs.sort(key=lambda f: int(re.sub('\D', '', f)))
 
+    # Enables/Disables boinding-boxing the input image with colored rectangles
+    draw_rect = True
+
     for i, (prediction, input) in enumerate(tqdm(zip(predictions, inputs))):
+        form = cv2.imread(input)
         mask = cv2.imread(prediction)
-        box_fitted = bounding_box(mask)
+        rect, box_fitted = bounding_box(form, mask, draw_rect=draw_rect)
 
         # # Used for peaking the outputs, ->  will be deleted!
         # winname = 'mask'
@@ -138,7 +96,7 @@ if __name__ == "__main__":
 
         cv2.imwrite(os.path.join(saving_path, str(i) + '_boxfitted.png'), box_fitted)
 
-        rect = bb_rectangle(cv2.imread(input), mask)
+        # rect = bb_rectangle(input, mask)
         
         # winname = 'rect_fitted'
         # cv2.imshow(winname, rect)
