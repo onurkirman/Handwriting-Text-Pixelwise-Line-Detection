@@ -69,10 +69,10 @@ if __name__ == "__main__":
     os.makedirs(saving_path_rect, exist_ok=True)
 
 
-    predictions = glob.glob('./' + raw_data_folder + 'prediction' + '/*_output.png')
+    predictions = glob.glob('./' + raw_data_folder + 'mask' + '/*.png')
     predictions.sort(key=lambda f: int(re.sub('\D', '', f)))
 
-    inputs = glob.glob('./' + raw_data_folder + 'prediction' + '/*_input.png')
+    inputs = glob.glob('./' + raw_data_folder + 'form' + '/*.png')
     inputs.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     # Enables/Disables boinding-boxing the input image with colored rectangles
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         # cv2.waitKey(2000)
         # cv2.destroyAllWindows()
 
-        cv2.imwrite(os.path.join(saving_path, str(i) + '_boxfitted.png'), box_fitted)
+        cv2.imwrite(os.path.join(saving_path, str(input.split('\\')[-1][:-4]) + '_boxfitted.png'), box_fitted)
 
         # rect = bb_rectangle(input, mask)
         
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         # cv2.waitKey(2000)
         # cv2.destroyAllWindows()
 
-        cv2.imwrite(os.path.join(saving_path_rect, str(i) + '_rect.png'), rect)
+        cv2.imwrite(os.path.join(saving_path_rect, str(input.split('\\')[-1][:-4]) + '_rect.png'), rect)
 
 
     print("Program Finished!")
