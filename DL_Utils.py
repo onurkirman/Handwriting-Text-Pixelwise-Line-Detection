@@ -1,8 +1,273 @@
+''' 
+    Onur Kirman S009958 Computer Science Undergrad at Ozyegin University
+
+                                *** Notes Before Starting ***
+    
+    In the folder named data, we have; line_info.txt and 1539 form images from the IAM Handwriting Database
+        - The line_info.txt is the reformatted version (header part deleted version) of lines.txt file
+    
+    Hyperparameters that can be adjusted, and the Data containing paths are listed at the top of the code
+
+    Directory Hierarchy:
+    src
+        data
+            - forms
+            - line_info.txt
+        dataset
+            - train
+            - test
+            - validation
+        models
+            - CNN_network.py            -> Simple CNN Model
+            - Unet_model.py             -> Full Unet Model
+            - Unet_model_clipped.py     -> Sliced Unet Model
+        output
+            - rect              -> Rectangle-Fitted tested form images
+            - box_fitted        -> Bounding Box Created Over the Predictions
+            - form              -> form images tested saved again for easy use and comparason
+            - mask              -> Predictions/Outputs of the network
+        output_batch -> (created, if requested, at the end of main.py to save the output batch) ->
+        utils
+            - image_preprocess.py
+            ** Add a new script for data allocation with network train & test. Remove the part from the main
+            ** Keep only the requered script runs in main.py -> TODO LATER !! 
+        weight
+            - model_check.pt    -> checkpoint of the model used.
+        main.py
+        
+        
+
+    Steps Followed:
+    Load Data -> Make Dataset -> Load Dataset -> Built Model -> Train Model -> Validate -> Save Model -> Load Model -> Test Model -> Output/View 
+    
+    Note that: Validation done in the Training Part if wanted
+
+    **** Also -> "Train: Overlapsing, Train2: Condition Specific Not Overlaping, Train3: Generic Not Overlaping" ****
+
+    Note for Loss Function ->  "For a binary classification you could use nn.CrossEntropyLoss() with a logit output of shape [batch_size, 2] 
+                                or nn.BCELoss() with a nn.Sigmoid() in the last layer."
+'''
+
+import os
+import re
+import sys
+import cv2
+import time
+import glob
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+from timeit import default_timer as timer
+from PIL import Image, ImageOps
 
 import torch
+import torch.nn.functional as F
+from torch import nn
+from torch import optim
+from torch.utils.data import Dataset, DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
+
 import torchvision
-from timeit import default_timer as timer
-import sys
+import torchvision.transforms.functional as TF
+from torchvision import transforms
+from torchsummary import summary
+
+from models.Unet_model import UnetModel
+from models.Unet_model_clipped import UnetModelClipped
+from models.CNN_network import Network
+
+
+# Plots the given batch in 3 rows; Raw, Mask, Bitwise_Anded
+def plt_images(images, masks, batch_size):
+    fig, axs = plt.subplots(3, batch_size, figsize=(images[0].shape))
+
+    for i in range(len(images)):
+        axs[0][i].imshow(images[i], cmap='gray')
+        axs[1][i].imshow(masks[i], cmap='gray')
+        axs[2][i].imshow(images[i] & masks[i], cmap='gray')
+    fig.suptitle("Top Row: raw images, Middle Row: masks, Bottom Row: bitwise_and masks")
+    plt.show()
+
+
+# Returns the images and masks in the original format
+def undo_preprocess(images, predicts):
+    x = []
+    y = []
+
+    images = images.cpu().numpy()
+    predicts = predicts.cpu().numpy()
+
+    for index in range(images.shape[0]):
+        image = images[index]
+        # Needed to convert c,h,w -> h,w,c
+        image = np.transpose(image, (1, 2, 0))
+        # make every pixel 0-1 range than mul. 255 to scale the value
+        image = np.squeeze(image) * 255
+        x.append(image.astype(np.uint8))
+
+        predict = predicts[index]
+        # Needed to convert c,h,w -> h,w,c
+        mask_array = np.transpose(predict, (1, 2, 0))
+        # Every pixel has two class grad, so we pick the highest
+        mask_array = np.argmax(mask_array, axis=2) * 255
+        mask_array = mask_array.astype(np.uint8)
+        y.append(mask_array)
+    return np.array(x), np.array(y)
+
+
+# Saves the given batch in directory
+def save_output_batch(images, outputs):
+    path = os.path.join(os.getcwd(), 'output_batch\\')
+    os.makedirs(path, exist_ok=True)
+    print(f'You can find samples in \'{path}\'')
+
+    for index in range(len(images)):
+        image = images[index]
+        save_image = Image.fromarray(image)
+        save_image.save(path + str(index) + '_input.png')
+
+        mask = outputs[index]
+        save_mask = Image.fromarray(mask)
+        save_mask.save(path + str(index) + '_output.png')
+
+
+# Saves the given batch in directory
+def save_predictions(images, predictions, filenames):
+    path = os.path.join(os.getcwd(), 'output\\')
+    
+    form_path = os.path.join(path, 'form')
+    pred_path = os.path.join(path, 'mask')
+    
+    os.makedirs(form_path, exist_ok=True)
+    os.makedirs(pred_path, exist_ok=True)
+
+    for idx, (image, prediction) in enumerate(zip(images, predictions)):
+        save_image = Image.fromarray(image)
+        save_image.save(os.path.join(form_path , str(filenames[idx])))
+
+        save_prediction = Image.fromarray(prediction)
+        save_prediction.save(os.path.join(pred_path , str(filenames[idx])))
+    print(f'You can find predictions in \'{path}\'')
+
+
+# Loads the data from the given path
+def load_data(dataset_path):
+    forms = []
+    masks = []
+    filenames = []
+
+    # sample path -> './dataset/train/form/*.png'
+    form_names = glob.glob('./' + dataset_path + '/form' + '/*.png')
+    # Sorts them as 0,1,2..
+    form_names.sort(key=lambda f: int(re.sub('\D', '', f)))
+
+    # sample path -> './dataset/train/mask/*.png'
+    mask_names = glob.glob('./' + dataset_path + '/mask' + '/*.png')
+    # Sorts them as 0,1,2..
+    mask_names.sort(key=lambda f: int(re.sub('\D', '', f)))
+
+    for i, (form_name, mask_name) in enumerate(zip(form_names, mask_names)):
+        form = np.asarray(Image.open(form_name))
+        mask = np.asarray(Image.open(mask_name))
+
+        forms.append(form)
+        masks.append(mask)
+        filenames.append(form_name.split('\\')[-1])
+
+    return np.array(forms), np.array(masks), np.array(filenames)
+
+
+
+# DATASET CLASS
+class FormDS(Dataset):
+    def __init__(self, path, number_of_classes: int, augmentation=False):
+        images, masks, filenames = load_data(path)
+        self.images = images
+        self.masks = masks
+        self.filenames = filenames
+        self.number_of_classes = number_of_classes
+        self.length = len(images)
+        self.augmentation = augmentation
+
+    # Converts the image, a PIL image, into a PyTorch Tensor
+    def transform(self, image, mask):
+        # needed to apply transforms
+        image = transforms.ToPILImage()(image)
+        mask = transforms.ToPILImage()(mask)
+
+        if self.augmentation:
+            # Random horizontal flipping
+            if random.random() > 0.5:
+                image = TF.hflip(image)
+                mask = TF.hflip(mask)
+
+            # Random vertical flipping
+            if random.random() > 0.5:
+                image = TF.vflip(image)
+                mask = TF.vflip(mask)
+            
+            # # Random rotation on clockwise or anticlockwise
+            # if random.random() > 0.5:
+            #     rotate_direction = [-1, 1] # -1 -> anticlockwise 
+            #     angle = 90 * random.choice(rotate_direction)
+            #     image = TF.rotate(image, angle)
+            #     mask = TF.rotate(mask, angle)
+
+            # # Resize -> Surprisingly decreasing our accuracy!
+            # resize_image = transforms.Resize(size=(312, 312))
+            # resize_mask = transforms.Resize(size=(312, 312), interpolation=Image.NEAREST)
+            # image = resize_image(image)
+            # mask = resize_mask(mask) # -> needs to be exactly 0-1
+            # # Random Crop
+            # i, j, h, w = transforms.RandomCrop.get_params(image, output_size=(256, 256))
+            # image = TF.crop(image, i, j, h, w)
+            # mask = TF.crop(mask, i, j, h, w)
+
+
+        # # use this in case of observation need     -> will be deleted!
+        # im = np.array(image, dtype='float32')
+        # ma = np.array(mask, dtype=int)
+        # im = im * 255
+        # ma = ma * 255
+        # im = Image.fromarray(np.uint8(im))
+        # ma = Image.fromarray(np.uint8(ma))
+        # im.show()
+        # ma.show()
+
+
+        # Swaps color axis because
+        # numpy image: H x W x C
+        # torch image: C X H X W
+        # Transform to tensor
+        img = TF.to_tensor(np.array(image))
+        msk = TF.to_tensor(np.array(mask))
+        return img, msk
+
+    def __getitem__(self, idx):
+        filename = self.filenames[idx]
+
+        image = self.images[idx]
+        image = image.astype(np.float32)
+        image = image / 255  # make pixel values between 0-1
+
+        mask = self.masks[idx]
+        mask = mask.astype(np.float32)
+        mask = mask / 255   # make pixel values 0-1
+
+        image, mask = self.transform(image, mask)
+
+        return image, mask, filename
+
+    def __len__(self):
+        return self.length
+
+
+
+# TODO, LATER add a model chooser
+def build_model():
+    return ''
+
+
 
 class Validation: 
     def __init__(self, data_loader, device, criterion):
@@ -37,7 +302,6 @@ class Validation:
         return val_loss, acc, len(self.data_loader)
 
 
-# TODO
 class Train:
     def __init__(self, data_loader, device, criterion, optimizer, validation=None, scheduler=None):
         self.data_loader = data_loader 
@@ -113,6 +377,57 @@ class Train:
         return model
 
 
-# TODO
-def build_model():
-    return ''
+class Test:
+    def __init__(self, data_loader, batch_size, device):
+        super().__init__()
+        self.data_loader = data_loader
+        self.batch_size = batch_size
+        self.device = device
+        
+    # Testing of the Model
+    def start(self, model, is_saving_output, sample_view):
+        all_forms = []
+        all_predictions = []
+        all_filenames = []
+        view_count = 0
+
+        # Test the model
+        model.eval()  # eval mode (batchnorm uses moving mean/variance instead of mini-batch mean/variance)
+        with torch.no_grad():  # used for dropout layers
+            correct_pixel = 0
+            total_pixel = 0
+            for images, masks, filenames in self.data_loader:
+                images = images.to(self.device)
+                masks = masks.type(torch.LongTensor)
+                # delete color channel to compare directly with prediction
+                masks = masks.reshape(masks.shape[0], masks.shape[2], masks.shape[3])
+                masks = masks.to(self.device)
+
+                predicts = model(images)
+                _, predicted = torch.max(predicts.data, 1)
+                correct_pixel += (predicted == masks).sum().item()
+
+                b, h, w = masks.shape
+                batch_total_pixel = b * h * w
+                total_pixel += batch_total_pixel
+                
+                # if pre-set addes images to list
+                if is_saving_output:
+                    af, ap = undo_preprocess(images, predicts)
+                    all_forms.extend(af)
+                    all_predictions.extend(ap)
+                    all_filenames.extend(filenames)
+
+                # To observe random batch prediction uncomment!
+                if sample_view and view_count < 10 and random.random() > 0.5:
+                    view_count += 1
+                    images, masks = undo_preprocess(images, predicts)
+                    plt_images(images, masks)
+
+            print(f"{correct_pixel} / {total_pixel}")
+            print(f"Test Accuracy on the model with {len(self.data_loader) * self.batch_size} images: {100 * correct_pixel / total_pixel:.4f}%")
+        
+        # Saves the output
+        if is_saving_output:
+            save_predictions(np.array(all_forms), np.array(all_predictions))
+
