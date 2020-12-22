@@ -88,21 +88,13 @@ def covert_images(folder_name, d, final_image_size):
 
         height, width = img.shape
         mask = np.zeros((height, width), dtype='uint8')
-        mask2 = np.zeros((height, width), dtype='uint8')
-
 
         lines = d[filename]
-        lines2 = np.array(lines, dtype=int)
-        
         lines = generic_line_preprocess(lines)
 
         for line in lines:
             x, y, width, height = line
             mask[y:y+height, x:x+width] = 255
-
-        for line in lines2:
-            x, y, width, height = line
-            mask2[y:y+height, x:x+width] = 255
         
         # removes the unwanted writer name part at the end
         img[y+height:, 100:-100] = img.mean() + 5 if img.mean() < 251 else 255
@@ -116,10 +108,6 @@ def covert_images(folder_name, d, final_image_size):
         mask = mask[500:-500, :]
         mask = downscale_image(mask, final_image_size, interpolation=cv2.INTER_NEAREST)
         masks.append(mask)
-        
-        # cropping mask to match the image
-        mask2 = mask2[500:-500, :]
-        mask2 = downscale_image(mask2, final_image_size, interpolation=cv2.INTER_NEAREST)
 
         # winname = 'image'
         # cv2.namedWindow(winname)        
@@ -129,15 +117,10 @@ def covert_images(folder_name, d, final_image_size):
         # winname = 'imageN'
         # cv2.imshow(winname, mask)
         # cv2.moveWindow(winname, 410 + final_image_size[0], 100)
-        
-        # winname = 'image_No_Process'
-        # cv2.namedWindow(winname)        
-        # cv2.imshow(winname, mask2)
-        # cv2.moveWindow(winname, 420 + final_image_size[0] * 2, 100)  
         # cv2.waitKey(1000)
         # cv2.destroyAllWindows()
     
-    return np.array(images), np.array(masks)
+    return np.array(images), np.array(masks), tuple(dl)
 
 
 # Saves given forms and masks in the given dataset path
@@ -147,24 +130,17 @@ def save_files(forms, masks, path):
         cv2.imwrite(os.path.join(path + '\\mask', str(i) + '.png'), masks[i])
 
 
-if __name__ == '__main__':
-    print("Program Started!")
-
-    # folder name for raw form images
-    raw_data_folder = 'data/forms/' # will be -> 'raw_data/forms/'
-
-    # Hyperparameters
-    final_image_size = (256, 256)
-    split_percentage = 0.2 # used for data split into two sub-parts
-
-    # Gets current working directory
-    path = os.getcwd()
-    
+def preprocess_logic(raw_data_folder,
+                    final_image_size,
+                    split_percentage,
+                    dataset_folder_name
+                    ):
+    print("Preprocess Started!")
     # Paths for folders
-    dataset_path = '\\dataset'
-    train_path = os.path.join(path + dataset_path, '4_train')
-    test_path = os.path.join(path + dataset_path, '4_test')
-    validation_path = os.path.join(path + dataset_path, '4_validation')
+    dataset_path = os.path.join(os.getcwd(), dataset_folder_name)
+    train_path = os.path.join(dataset_path, 'train')
+    test_path = os.path.join(dataset_path, 'test')
+    validation_path = os.path.join(dataset_path, 'validation')
     
 
     # we have file name and lines in the corres. image
@@ -194,4 +170,9 @@ if __name__ == '__main__':
     save_files(test_images, test_masks, test_path)
     save_files(validation_images, validation_masks, validation_path)
 
-    print("Program Finished!")
+    # Logic Part of Pre-Process
+    preprocess_logic(raw_data_folder,
+                    final_image_size,
+                    split_percentage,
+                    dataset_folder_name
+                    )
