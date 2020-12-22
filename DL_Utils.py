@@ -429,5 +429,5 @@ class Test:
         
         # Saves the output
         if is_saving_output:
-            save_predictions(np.array(all_forms), np.array(all_predictions))
+            save_predictions(np.array(all_forms), np.array(all_predictions), np.array(all_filenames))
 

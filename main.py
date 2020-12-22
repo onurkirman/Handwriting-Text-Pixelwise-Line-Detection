@@ -475,7 +475,7 @@ with torch.no_grad():  # used for dropout layers
 
 # Saves the output
 if is_saving_output:
-    save_predictions(np.array(all_forms), np.array(all_predictions))
+    save_predictions(np.array(all_forms), np.array(all_predictions), np.array(all_filenames))
 
 # # Gets the images and their predicted masks in normalized
 # images, masks = undo_preprocess(images, predicts)

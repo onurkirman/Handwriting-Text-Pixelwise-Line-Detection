@@ -110,6 +110,8 @@ model = UnetModel(number_of_classes, dropout_rate).to(device)
 
 # Load to CPU. Later it can be moved to GPU as needed
 model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('cpu')))
+
+# Testing Process
 test = Test(test_data_loader, batch_size, device)
 test.start(model, is_saving_output, sample_view)
 
