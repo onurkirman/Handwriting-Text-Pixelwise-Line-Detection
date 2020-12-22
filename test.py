@@ -1,51 +1,5 @@
 ''' 
-    Onur Kirman S009958 Computer Science Undergrad at Ozyegin University
-
-                                *** Notes Before Starting ***
-    
-    In the folder named data, we have; line_info.txt and 1539 form images from the IAM Handwriting Database
-        - The line_info.txt is the reformatted version (header part deleted version) of lines.txt file
-    
-    Hyperparameters that can be adjusted, and the Data containing paths are listed at the top of the code
-
-    Directory Hierarchy:
-    src
-        data
-            - forms
-            - line_info.txt
-        dataset
-            - train
-            - test
-            - validation
-        models
-            - CNN_network.py            -> Simple CNN Model
-            - Unet_model.py             -> Full Unet Model
-            - Unet_model_clipped.py     -> Sliced Unet Model
-        output
-            - rect              -> Rectangle-Fitted tested form images
-            - box_fitted        -> Bounding Box Created Over the Predictions
-            - form              -> form images tested saved again for easy use and comparason
-            - mask              -> Predictions/Outputs of the network
-        output_batch -> (created, if requested, at the end of main.py to save the output batch) ->
-        utils
-            - image_preprocess.py
-            ** Add a new script for data allocation with network train & test. Remove the part from the main
-            ** Keep only the requered script runs in main.py -> TODO LATER !! 
-        weight
-            - model_check.pt    -> checkpoint of the model used.
-        main.py
-        
-        
-
-    Steps Followed:
-    Load Data -> Make Dataset -> Load Dataset -> Built Model -> Train Model -> Validate -> Save Model -> Load Model -> Test Model -> Output/View 
-    
-    Note that: Validation done in the Training Part if wanted
-
-    **** Also -> "Train: Overlapsing, Train2: Condition Specific Not Overlaping, Train3: Generic Not Overlaping" ****
-
-    Note for Loss Function ->  "For a binary classification you could use nn.CrossEntropyLoss() with a logit output of shape [batch_size, 2] 
-                                or nn.BCELoss() with a nn.Sigmoid() in the last layer."
+    Onur Kirman S009958 Computer Science Undergrad at Ozyegin Universitys      
 '''
 
 import torch
