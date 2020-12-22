@@ -166,9 +166,29 @@ def preprocess_logic(raw_data_folder,
 
     # Save all train, test & validation files
     print("Saving Datasets")
-    save_files(train_images, train_masks, train_path)
-    save_files(test_images, test_masks, test_path)
-    save_files(validation_images, validation_masks, validation_path)
+    data_images = [train_images, test_images, validation_images]
+    data_masks = [train_masks, test_masks, validation_masks]
+    data_filenames = [train_filenames, test_filenames, validation_filenames]
+    data_paths = [train_path, test_path, validation_path]
+
+    for imgs, masks, flnames, path in zip(data_images,
+                                 data_masks,
+                                 data_filenames,
+                                 data_paths):
+        save_files(imgs, masks, flnames, path)
+    print("Preprocess Finished!")
+
+
+if __name__ == '__main__':
+    # folder name for raw form images
+    raw_data_folder = 'data/forms/'
+
+    # Hyperparameters
+    final_image_size = (256, 256)
+    split_percentage = 0.2 # used for data split into two sub-parts
+
+    # Dataset directory
+    dataset_folder_name = 'dataset_combined'
 
     # Logic Part of Pre-Process
     preprocess_logic(raw_data_folder,
