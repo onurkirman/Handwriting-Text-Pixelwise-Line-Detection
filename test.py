@@ -71,7 +71,7 @@ from torchvision import transforms
 
 from DL_Utils import (FormDS, Test, Train, Validation, load_data, plt_images,
                       save_output_batch, save_predictions, undo_preprocess,
-                      torch_loader)
+                      build_model, torch_loader)
 from models.CNN_network import Network
 from models.Unet_model import UnetModel
 from models.Unet_model_clipped import UnetModelClipped
@@ -104,7 +104,7 @@ trained_model_path = 'weight\\model_check_combined.pt'
 test_data_loader = torch_loader(test_path, number_of_classes, batch_size, augmentation=True)
 
 # Restore the model from "model_check.pt"
-model = UnetModel(number_of_classes, dropout_rate).to(device)
+model = model = build_model('unet', device, number_of_classes, dropout_rate)
 
 # Load to CPU. Later it can be moved to GPU as needed
 model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('cpu')))
