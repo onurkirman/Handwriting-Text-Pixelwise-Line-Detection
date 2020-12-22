@@ -48,32 +48,20 @@
                                 or nn.BCELoss() with a nn.Sigmoid() in the last layer."
 '''
 
-import glob
 import os
-import random
-import re
 import time
-from timeit import default_timer as timer
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torch.nn.functional as F
-import torchvision
-import torchvision.transforms.functional as TF
-from PIL import Image, ImageOps
 from torch import nn, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, Dataset
 from torchsummary import summary
-from torchvision import transforms
 
-from DL_Utils import (FormDS, Test, Train, Validation, load_data, plt_images,
-                      save_output_batch, save_predictions, undo_preprocess,
-                      build_model, torch_loader)
-from models.CNN_network import Network
-from models.Unet_model import UnetModel
-from models.Unet_model_clipped import UnetModelClipped
+from utils.image_preprocess import preprocess_logic
+from DL_Utils import (FormDS, Test, Train, Validation, build_model, load_data,
+                      plt_images, save_output_batch, save_predictions,
+                      torch_loader, undo_preprocess)
 
 
 def process(epochs,
@@ -152,10 +140,13 @@ def process(epochs,
     test.start(model, is_saving_output, sample_view)
 
 if __name__ == "__main__":
+    
+
+    
     print(f'Cuda Available: {torch.cuda.is_available()}')
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
     
-    # Hyperparameters
+    # Hyperparameters for Training & Testing
     epochs = 8                # 4 predicts well, might be 2. 8 is the best
     batch_size = 4            # 4 is OK, might be 8 (exceed mem.)
     batch_extender = True     # Extends the batch so that training process done once in twice -> gives better result
