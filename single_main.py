@@ -92,39 +92,40 @@ def process(epochs,
             test_path,
             validation_path,
             trained_model_path):
-    print('Process Started.')
 
-    # Hyperparameter Print
+    print('Process Started.')
+    ## Hyperparameters ##
     print(f'Batch Size: {batch_size*2 if batch_extender else batch_size} {"(Artificial Batch)" if batch_extender else ""}')
     print(f'Learning Rate: {learning_rate}')
     print(f'Dropout  Rate: {dropout_rate}\n')
 
-    # Train Dataset Loaded to Torch Here
+    ## Train Dataset Loaded to Torch Here ##
     train_data_loader = torch_loader(train_path, number_of_classes, batch_size, augmentation=True)
 
-    # Validation Dataset Loaded to Torch Here
+    ## Validation Dataset Loaded to Torch Here ##
     validation_data_loader = torch_loader(validation_path, number_of_classes, batch_size, augmentation=True)
 
-    ### Peak a look at the dataset (forms, masks and their combination) ###
+    ## Peak a look at the dataset (forms, masks and their combination) ##
     # plt_images(train_dataset.images[:batch_size], train_dataset.masks[:batch_size])
 
 
-    # Built Model
+    ## Built Model ##
     model = build_model('unet', device, number_of_classes, dropout_rate)
 
 
-    # Loss & Optimizer of the Model
+    ## Loss Function ##
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    ## Optimizer of the Model ##
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)    # Works better than SGD
     # optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
 
 
-    ### Learning Rate Scheduler ###
+    ## Learning Rate Scheduler ##
     scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.2, patience=1, verbose=True)
     # scheduler = StepLR(optimizer, step_size=2, gamma=0.2)
 
-    # VALIDATION
+    ### VALIDATION ##
     validation = Validation(validation_data_loader, device, criterion)
 
 

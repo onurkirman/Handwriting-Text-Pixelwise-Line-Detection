@@ -177,7 +177,6 @@ def load_data(dataset_path):
     return np.array(forms), np.array(masks), np.array(filenames)
 
 
-
 # DATASET CLASS
 class FormDS(Dataset):
     def __init__(self, path, number_of_classes: int, augmentation=False):
@@ -262,7 +261,6 @@ class FormDS(Dataset):
         return self.length
 
 
-
 # Builds model as it is specified
 def build_model(name, device, number_of_classes, dropout_rate=0):
     """
@@ -284,6 +282,7 @@ def build_model(name, device, number_of_classes, dropout_rate=0):
     return model
 
 
+# Loads data into torch
 def torch_loader(path, number_of_classes, batch_size, augmentation=True):
     dataset = FormDS(path, number_of_classes, augmentation=augmentation)
     data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -291,6 +290,7 @@ def torch_loader(path, number_of_classes, batch_size, augmentation=True):
     return data_loader
 
 
+# Validation Class
 class Validation: 
     def __init__(self, data_loader, device, criterion):
         self.data_loader = data_loader
@@ -323,7 +323,7 @@ class Validation:
         acc = correct_pixel/total_pixel
         return val_loss, acc, len(self.data_loader)
 
-
+# Train Class
 class Train:
     def __init__(self, data_loader, device, criterion, optimizer, validation=None, scheduler=None):
         self.data_loader = data_loader 
@@ -398,7 +398,7 @@ class Train:
         print('Execution time:', '{:5.2f}'.format(timer() - start_time), 'seconds')
         return model
 
-
+# Test Class
 class Test:
     def __init__(self, data_loader, batch_size, device):
         super().__init__()
