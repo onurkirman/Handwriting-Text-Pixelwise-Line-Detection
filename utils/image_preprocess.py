@@ -123,11 +123,11 @@ def covert_images(folder_name, d, final_image_size):
     return np.array(images), np.array(masks), tuple(dl)
 
 
-# Saves given forms and masks in the given dataset path
-def save_files(forms, masks, path):
-    for i in range(forms.shape[0]):
-        cv2.imwrite(os.path.join(path + '\\form', str(i) + '.png'), forms[i])
-        cv2.imwrite(os.path.join(path + '\\mask', str(i) + '.png'), masks[i])
+# Saves given forms with filenames in the given dataset path
+def save_files(forms, masks, filenames, path):
+    for idx in range(forms.shape[0]):
+        cv2.imwrite(os.path.join(path + '\\form', str(filenames[idx]) + '.png'), forms[idx])
+        cv2.imwrite(os.path.join(path + '\\mask', str(filenames[idx]) + '.png'), masks[idx])
 
 
 def preprocess_logic(raw_data_folder,
@@ -147,16 +147,16 @@ def preprocess_logic(raw_data_folder,
     parsed_data = parse_line_info()
 
     # returns all image and mask as np array
-    train_images, train_masks = covert_images(raw_data_folder, parsed_data, final_image_size)
+    train_images, train_masks, filenames = covert_images(raw_data_folder, parsed_data, final_image_size)
     
 
     print("Dataset Split Session Started...")
     # train_test_split -> we can use the stratification parameters
     # First divide the data into test/train datasets
-    train_images, test_images, train_masks, test_masks = train_test_split(train_images, train_masks, test_size = split_percentage)
+    train_images, test_images, train_masks, test_masks, train_filenames, test_filenames = train_test_split(train_images, train_masks, filenames, test_size = split_percentage)
     
     # Later divide the remaining train dataset into train & validation datasets
-    train_images, validation_images, train_masks, validation_masks = train_test_split(train_images, train_masks, test_size = split_percentage)
+    train_images, validation_images, train_masks, validation_masks, train_filenames, validation_filenames = train_test_split(train_images, train_masks, train_filenames, test_size = split_percentage)
     print(train_images.shape[0], test_images.shape[0], validation_images.shape[0]) # length of the datasets 
 
 
@@ -166,9 +166,29 @@ def preprocess_logic(raw_data_folder,
 
     # Save all train, test & validation files
     print("Saving Datasets")
-    save_files(train_images, train_masks, train_path)
-    save_files(test_images, test_masks, test_path)
-    save_files(validation_images, validation_masks, validation_path)
+    data_images = [train_images, test_images, validation_images]
+    data_masks = [train_masks, test_masks, validation_masks]
+    data_filenames = [train_filenames, test_filenames, validation_filenames]
+    data_paths = [train_path, test_path, validation_path]
+
+    for imgs, masks, flnames, path in zip(data_images,
+                                 data_masks,
+                                 data_filenames,
+                                 data_paths):
+        save_files(imgs, masks, flnames, path)
+    print("Preprocess Finished!")
+
+
+if __name__ == '__main__':
+    # folder name for raw form images
+    raw_data_folder = 'data/forms/'
+
+    # Hyperparameters
+    final_image_size = (256, 256)
+    split_percentage = 0.2 # used for data split into two sub-parts
+
+    # Dataset directory
+    dataset_folder_name = 'dataset_combined'
 
     # Logic Part of Pre-Process
     preprocess_logic(raw_data_folder,
