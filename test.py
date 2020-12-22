@@ -70,7 +70,8 @@ from torchsummary import summary
 from torchvision import transforms
 
 from DL_Utils import (FormDS, Test, Train, Validation, load_data, plt_images,
-                      save_output_batch, save_predictions, undo_preprocess)
+                      save_output_batch, save_predictions, undo_preprocess,
+                      torch_loader)
 from models.CNN_network import Network
 from models.Unet_model import UnetModel
 from models.Unet_model_clipped import UnetModelClipped
@@ -100,10 +101,7 @@ test_path = data_dir + '/test'
 trained_model_path = 'weight\\model_check_combined.pt'
 
 # Test Dataset Loaded to Torch Here
-test_dataset = FormDS(test_path, number_of_classes, augmentation=False)
-test_data_loader = DataLoader(
-    test_dataset, batch_size=batch_size, shuffle=True)
-print(f'Test  DS Size: {len(test_dataset)} ({len(test_data_loader)} batches)')
+test_data_loader = torch_loader(test_path, number_of_classes, batch_size, augmentation=True)
 
 # Restore the model from "model_check.pt"
 model = UnetModel(number_of_classes, dropout_rate).to(device)

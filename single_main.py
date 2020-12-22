@@ -69,7 +69,8 @@ from torchsummary import summary
 from torchvision import transforms
 
 from DL_Utils import (FormDS, Test, Train, Validation, load_data, plt_images,
-                      save_output_batch, save_predictions, undo_preprocess)
+                      save_output_batch, save_predictions, undo_preprocess,
+                      build_model, torch_loader)
 from models.CNN_network import Network
 from models.Unet_model import UnetModel
 from models.Unet_model_clipped import UnetModelClipped
@@ -99,27 +100,17 @@ def process(epochs,
     print(f'Dropout  Rate: {dropout_rate}\n')
 
     # Train Dataset Loaded to Torch Here
-    train_dataset = FormDS(train_path, number_of_classes, augmentation=True)
-    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    print(f'Train DS Size: {len(train_dataset)} ({len(train_data_loader)} batches)')
-
-    # Test Dataset Loaded to Torch Here
-    test_dataset = FormDS(test_path, number_of_classes, augmentation=True)
-    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
-    print(f'Test  DS Size: {len(test_dataset)} ({len(test_data_loader)} batches)')
+    train_data_loader = torch_loader(train_path, number_of_classes, batch_size, augmentation=True)
 
     # Validation Dataset Loaded to Torch Here
-    validation_dataset = FormDS(validation_path, number_of_classes, augmentation=True)
-    validation_data_loader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=True)
-    print(f'Valid DS Size: {len(validation_dataset)} ({len(validation_data_loader)} batches)\n')
-
+    validation_data_loader = torch_loader(validation_path, number_of_classes, batch_size, augmentation=True)
 
     ### Peak a look at the dataset (forms, masks and their combination) ###
     # plt_images(train_dataset.images[:batch_size], train_dataset.masks[:batch_size])
 
 
     # Built Model
-    model = UnetModel(number_of_classes, dropout_rate).to(device)
+    model = build_model('unet', device, number_of_classes, dropout_rate)
 
 
     # Loss & Optimizer of the Model
@@ -133,9 +124,11 @@ def process(epochs,
     scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.2, patience=1, verbose=True)
     # scheduler = StepLR(optimizer, step_size=2, gamma=0.2)
 
-
+    # VALIDATION
     validation = Validation(validation_data_loader, device, criterion)
 
+
+    ### TRAIN ###
     train = Train(train_data_loader, device, criterion, optimizer, validation, scheduler)
     model = train.start(model,epochs,batch_extender,validation_on, scheduler_on, loss_print_per_epoch)
 
@@ -143,8 +136,12 @@ def process(epochs,
     torch.save(model.state_dict(), trained_model_path)
 
 
+    ### TEST ###
+    # Test Dataset Loaded to Torch Here
+    test_data_loader = torch_loader(test_path, number_of_classes, batch_size, augmentation=True)
+    
     # Rebuild the model, before the restore
-    model = UnetModel(number_of_classes, dropout_rate).to(device)
+    model = build_model('unet', device, number_of_classes, dropout_rate)
 
     # Restore the model from "model_check.pt"
     # Load to CPU. Later it can be moved to GPU as needed

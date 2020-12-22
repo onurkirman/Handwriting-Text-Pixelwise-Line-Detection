@@ -263,10 +263,32 @@ class FormDS(Dataset):
 
 
 
-# TODO, LATER add a model chooser
-def build_model():
-    return ''
+# Builds model as it is specified
+def build_model(name, device, number_of_classes, dropout_rate=0):
+    """
+    Builds a model from one of the provided models.
+    Currently provided models are specified as:
+    Unet_model, Unet_model_clipped and CNN_network
+    number_of_classes: Number of class that network needs to understand 
+                       which also used at the output layer
+    dropout_rate: The rate for dropouts in the given model. It is 0 by default
+    """
+    if name is 'unet':
+        model = UnetModel(number_of_classes, dropout_rate).to(device)
+    elif name is 'unet_small':
+        model = UnetModelClipped(number_of_classes, dropout_rate).to(device)
+    elif name is 'network':
+        model = Network(number_of_classes, dropout_rate).to(device)
+    else:
+        sys.exit('You need to choose one network model that is being provided. Stopping...')
+    return model
 
+
+def torch_loader(path, number_of_classes, batch_size, augmentation=True):
+    dataset = FormDS(path, number_of_classes, augmentation=augmentation)
+    data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    print(f'{path.split("/")[-1]} DS Size: {len(dataset)} ({len(data_loader)} batches)')
+    return data_loader
 
 
 class Validation: 
