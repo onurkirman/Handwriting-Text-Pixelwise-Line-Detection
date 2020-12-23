@@ -10,17 +10,17 @@
 
     Directory Hierarchy:
     src
-        data
-            - forms -> Raw images provided by IAM Handwriting DB
-            - line_info.txt -> Reformatted version (header part deleted version) of lines.txt file
-        dataset -> folder that has the preprocessed images seperated as foldered below
-            - train -> images for training
-                - form  -> preprocessed form images
-                - mask  -> mask images that is a creation of preprocess using given line informations
-            - test  -> images for testing
+        data            -> Raw Data
+            - forms                     -> Raw images provided by IAM Handwriting DB
+            - line_info.txt             -> Reformatted version (header part deleted version) of lines.txt file
+        dataset         -> folder that has the preprocessed images seperated as foldered below
+            - train         -> images for training
+                - form                  -> preprocessed form images
+                - mask                  -> mask images that is a creation of preprocess using given line informations
+            - test          -> images for testing
                 - form
                 - mask
-            - validation -> images for validation
+            - validation    -> images for validation
                 - form
                 - mask
         models
@@ -28,16 +28,16 @@
             - Unet_model.py             -> Full Unet Model
             - Unet_model_clipped.py     -> Sliced Unet Model
         output
-            - rect              -> Rectangle-Fitted tested form images
-            - box_fitted        -> Bounding Box Created Over the Predictions
-            - form              -> Form images in the dataset/test folder, saved again for easy use & comparison
-            - mask              -> Predictions/Outputs of the network
+            - rect                      -> Rectangle-Fitted tested form images
+            - box_fitted                -> Bounding Box Created Over the Predictions
+            - form                      -> Form images in the dataset/test folder, saved again for easy use & comparison
+            - mask                      -> Predictions/Outputs of the network
         output_batch -> (created, if requested, at the end of main.py to save the output batch) ->
         utils
-            - image_preprocess.py -> Module that preprocesses the raw images and saves them to given directory.
-            - DL_Utils.py -> Module has the required classes and boiler functions needed.
+            - image_preprocess.py       -> Module that preprocesses the raw images and saves them to given directory.
+            - DL_Utils.py               -> Module has the required classes and boiler functions needed.
         weight
-            - model_check.pt    -> checkpoint of the model used.
+            - model_check.pt            -> checkpoint of the model used.
         main.py        
         
 
@@ -145,23 +145,23 @@ def process(epochs,
 
 if __name__ == "__main__":
     
-    ### Preprocess Part ###
-    # folder name for raw form images
-    raw_data_folder = 'data/forms/'
+    # ### Preprocess Part ###
+    # # folder name for raw form images
+    # raw_data_folder = 'data/forms/'
 
-    # Hyperparameters
-    final_image_size = (256, 256)
-    split_percentage = 0.2 # used for data split into two sub-parts
+    # # Hyperparameters
+    # final_image_size = (256, 256)
+    # split_percentage = 0.2 # used for data split into two sub-parts
 
-    # Dataset directory
-    dataset_folder_name = 'dataset_combined'
+    # # Dataset directory
+    # dataset_folder_name = 'dataset_combined'
 
-    # Logic Part of Pre-Process
-    preprocess_logic(raw_data_folder,
-                    final_image_size,
-                    split_percentage,
-                    dataset_folder_name
-                    )
+    # # Logic Part of Pre-Process
+    # preprocess_logic(raw_data_folder,
+    #                 final_image_size,
+    #                 split_percentage,
+    #                 dataset_folder_name
+    #                 )
     
     print(f'Cuda Available: {torch.cuda.is_available()}')
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
@@ -214,7 +214,7 @@ if __name__ == "__main__":
             trained_model_path,
             output_dir)
 
-    if is_saving_output:
-        boundingbox.post_process(output_dir)
+    # if is_saving_output:
+    #     boundingbox.post_process(output_dir)
 
     print('Program Finished!')
