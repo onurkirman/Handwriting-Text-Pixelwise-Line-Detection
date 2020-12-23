@@ -238,7 +238,7 @@ def build_model(name, device, number_of_classes, dropout_rate=0):
 def torch_loader(path, number_of_classes, batch_size, augmentation=True):
     dataset = FormDS(path, number_of_classes, augmentation=augmentation)
     data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    print(f'{path.split("/")[-1]} DS Size: {len(dataset)} ({len(data_loader)} batches)')
+    print(f'{path.split("/")[-1].capitalize()} DS Size: {len(dataset)} ({len(data_loader)} batches)')
     return data_loader
 
 
