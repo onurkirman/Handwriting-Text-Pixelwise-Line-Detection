@@ -53,15 +53,8 @@ def bounding_box(input, prediction, draw_rect=False):
             cv2.rectangle(input, top_left, bottom_right, color, 2)
     return input, mask
 
-
-if __name__ == "__main__":
-    script_name = __file__.split('/')
-    print(f"\'{script_name[-1].capitalize()}\' Started!")
-
-    # folder name for raw form images
-    raw_data_folder = 'output/'
-
-    path = os.path.join(os.getcwd(), raw_data_folder)
+def post_process(prediction_folder):
+    path = os.path.join(os.getcwd(), prediction_folder)
     saving_path = os.path.join(path, 'box_fitted')
     os.makedirs(saving_path, exist_ok=True)
     
@@ -69,10 +62,10 @@ if __name__ == "__main__":
     os.makedirs(saving_path_rect, exist_ok=True)
 
 
-    predictions = glob.glob('./' + raw_data_folder + 'mask' + '/*.png')
+    predictions = glob.glob('./' + prediction_folder + 'mask' + '/*.png')
     predictions.sort(key=lambda f: int(re.sub('\D', '', f)))
 
-    inputs = glob.glob('./' + raw_data_folder + 'form' + '/*.png')
+    inputs = glob.glob('./' + prediction_folder + 'form' + '/*.png')
     inputs.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     # Enables/Disables boinding-boxing the input image with colored rectangles
@@ -106,6 +99,15 @@ if __name__ == "__main__":
 
         cv2.imwrite(os.path.join(saving_path_rect, str(input.split('\\')[-1][:-4]) + '_rect.png'), rect)
 
+if __name__ == "__main__":
+    script_name = __file__.split('/')
+    print(f"\'{script_name[-1].capitalize()}\' Started!")
+
+    # folder name for raw form images
+    raw_data_folder = 'output'
+
+    # post process
+    post_process(raw_data_folder)
 
     print("Program Finished!")
 
