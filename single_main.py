@@ -79,7 +79,8 @@ def process(epochs,
             train_path,
             test_path,
             validation_path,
-            trained_model_path):
+            trained_model_path,
+            output_dir):
 
     print('Process Started.')
     ## Hyperparameters ##
@@ -137,27 +138,27 @@ def process(epochs,
     model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('cpu')))
 
     test = Test(test_data_loader, batch_size, device)
-    test.start(model, is_saving_output, sample_view)
+    test.start(model, is_saving_output, sample_view, output_dir)
 
 if __name__ == "__main__":
     
-    ### Preprocess Part ###
-    # folder name for raw form images
-    raw_data_folder = 'data/forms/'
+    # ### Preprocess Part ###
+    # # folder name for raw form images
+    # raw_data_folder = 'data/forms/'
 
-    # Hyperparameters
-    final_image_size = (256, 256)
-    split_percentage = 0.2 # used for data split into two sub-parts
+    # # Hyperparameters
+    # final_image_size = (256, 256)
+    # split_percentage = 0.2 # used for data split into two sub-parts
 
-    # Dataset directory
-    dataset_folder_name = 'dataset_combined'
+    # # Dataset directory
+    # dataset_folder_name = 'dataset_combined'
 
-    # Logic Part of Pre-Process
-    preprocess_logic(raw_data_folder,
-                    final_image_size,
-                    split_percentage,
-                    dataset_folder_name
-                    )
+    # # Logic Part of Pre-Process
+    # preprocess_logic(raw_data_folder,
+    #                 final_image_size,
+    #                 split_percentage,
+    #                 dataset_folder_name
+    #                 )
     
     print(f'Cuda Available: {torch.cuda.is_available()}')
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
@@ -189,6 +190,9 @@ if __name__ == "__main__":
     trained_model_path = 'weight\\model_check_combined.pt'
     os.makedirs(os.path.join(os.getcwd(), trained_model_path.split("\\")[0]), exist_ok=True)
 
+    # Directory for predictions
+    output_dir = 'output'
+
     process(epochs,
             batch_size,
             batch_extender,
@@ -204,7 +208,8 @@ if __name__ == "__main__":
             train_path,
             test_path,
             validation_path,
-            trained_model_path)
+            trained_model_path,
+            output_dir)
 
 
     print('Program Finished!')

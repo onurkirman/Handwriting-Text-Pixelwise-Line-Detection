@@ -83,9 +83,9 @@ def save_output_batch(images, outputs):
         save_mask.save(path + str(index) + '_output.png')
 
 
-# Saves the given batch in directory
-def save_predictions(images, predictions, filenames):
-    path = os.path.join(os.getcwd(), 'output\\')
+# Saves the given batch in directory. By default it is set to be '/output'
+def save_predictions(images, predictions, filenames, path='output'):
+    path = os.path.join(os.getcwd(), path)
     
     form_path = os.path.join(path, 'form')
     pred_path = os.path.join(path, 'mask')
@@ -361,7 +361,7 @@ class Test:
         self.device = device
         
     # Testing of the Model
-    def start(self, model, is_saving_output, sample_view):
+    def start(self, model, is_saving_output, sample_view, path='output'):
         all_forms = []
         all_predictions = []
         all_filenames = []
@@ -405,5 +405,5 @@ class Test:
         
         # Saves the output
         if is_saving_output:
-            save_predictions(np.array(all_forms), np.array(all_predictions), np.array(all_filenames))
+            save_predictions(np.array(all_forms), np.array(all_predictions), np.array(all_filenames), path)
 
