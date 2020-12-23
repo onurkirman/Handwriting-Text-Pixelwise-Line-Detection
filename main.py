@@ -11,12 +11,18 @@
     Directory Hierarchy:
     src
         data
-            - forms
-            - line_info.txt
-        dataset
-            - train
-            - test
-            - validation
+            - forms -> Raw images provided by IAM Handwriting DB
+            - line_info.txt -> Reformatted version (header part deleted version) of lines.txt file
+        dataset -> folder that has the preprocessed images seperated as foldered below
+            - train -> images for training
+                - form  -> preprocessed form images
+                - mask  -> mask images that is a creation of preprocess using given line informations
+            - test  -> images for testing
+                - form
+                - mask
+            - validation -> images for validation
+                - form
+                - mask
         models
             - CNN_network.py            -> Simple CNN Model
             - Unet_model.py             -> Full Unet Model
@@ -24,13 +30,12 @@
         output
             - rect              -> Rectangle-Fitted tested form images
             - box_fitted        -> Bounding Box Created Over the Predictions
-            - form              -> form images tested saved again for easy use and comparason
+            - form              -> Form images in the dataset/test folder, saved again for easy use & comparison
             - mask              -> Predictions/Outputs of the network
         output_batch -> (created, if requested, at the end of main.py to save the output batch) ->
         utils
-            - image_preprocess.py
-            ** Add a new script for data allocation with network train & test. Remove the part from the main
-            ** Keep only the requered script runs in main.py -> TODO LATER !! 
+            - image_preprocess.py -> Module that preprocesses the raw images and saves them to given directory.
+            - DL_Utils.py -> Module has the required classes and boiler functions needed.
         weight
             - model_check.pt    -> checkpoint of the model used.
         main.py
@@ -42,11 +47,10 @@
     
     Note that: Validation done in the Training Part if wanted
 
-    **** Also -> "Train: Overlapsing, Train2: Condition Specific Not Overlaping, Train3: Generic Not Overlaping" ****
-
     Note for Loss Function ->  "For a binary classification you could use nn.CrossEntropyLoss() with a logit output of shape [batch_size, 2] 
                                 or nn.BCELoss() with a nn.Sigmoid() in the last layer."
 '''
+
 
 import os
 import re
