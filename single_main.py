@@ -38,8 +38,7 @@
             - DL_Utils.py -> Module has the required classes and boiler functions needed.
         weight
             - model_check.pt    -> checkpoint of the model used.
-        main.py
-        
+        main.py        
         
 
     Steps Followed:
@@ -65,7 +64,7 @@ from utils.image_preprocess import preprocess_logic
 from DL_Utils import (FormDS, Test, Train, Validation, build_model, load_data,
                       plt_images, save_output_batch, save_predictions,
                       torch_loader, undo_preprocess)
-
+import boundingbox
 
 def process(epochs,
             batch_size,
@@ -98,7 +97,7 @@ def process(epochs,
     validation_data_loader = torch_loader(validation_path, number_of_classes, batch_size, augmentation=True)
 
     ## Peak a look at the dataset (forms, masks and their combination) ##
-    # plt_images(train_dataset.images[:batch_size], train_dataset.masks[:batch_size])
+    plt_images(train_data_loader.dataset.images[:batch_size], train_data_loader.dataset.masks[:batch_size], batch_size)
 
 
     ## Built Model ##
@@ -114,8 +113,9 @@ def process(epochs,
 
 
     ## Learning Rate Scheduler ##
-    scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.2, patience=1, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='max', factor=0.2, patience=1, verbose=True)  # Works better
     # scheduler = StepLR(optimizer, step_size=2, gamma=0.2)
+
 
     ### VALIDATION ##
     validation = Validation(validation_data_loader, device, criterion)
@@ -145,23 +145,23 @@ def process(epochs,
 
 if __name__ == "__main__":
     
-    # ### Preprocess Part ###
-    # # folder name for raw form images
-    # raw_data_folder = 'data/forms/'
+    ### Preprocess Part ###
+    # folder name for raw form images
+    raw_data_folder = 'data/forms/'
 
-    # # Hyperparameters
-    # final_image_size = (256, 256)
-    # split_percentage = 0.2 # used for data split into two sub-parts
+    # Hyperparameters
+    final_image_size = (256, 256)
+    split_percentage = 0.2 # used for data split into two sub-parts
 
-    # # Dataset directory
-    # dataset_folder_name = 'dataset_combined'
+    # Dataset directory
+    dataset_folder_name = 'dataset_combined'
 
-    # # Logic Part of Pre-Process
-    # preprocess_logic(raw_data_folder,
-    #                 final_image_size,
-    #                 split_percentage,
-    #                 dataset_folder_name
-    #                 )
+    # Logic Part of Pre-Process
+    preprocess_logic(raw_data_folder,
+                    final_image_size,
+                    split_percentage,
+                    dataset_folder_name
+                    )
     
     print(f'Cuda Available: {torch.cuda.is_available()}')
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
@@ -170,9 +170,9 @@ if __name__ == "__main__":
     epochs = 8                # 4 predicts well, might be 2. 8 is the best
     batch_size = 4            # 4 is OK, might be 8 (exceed mem.)
     batch_extender = True     # Extends the batch so that training process done once in twice -> gives better result
-    learning_rate = 1e-2      # 1e-3 is OK., 5e-4 also OK. (0.01 -> 0.001 -> 0.0005) LR Scheduler!
+    learning_rate = 1e-2      # 1e-3 is OK., 5e-4 also OK. 1e-2 is the best. (0.01 -> 0.001 -> 0.0005) LR Scheduler!
     dropout_rate = 0.0        # 0.2 is nice with big train data
-    loss_print_per_epoch = 1  # desired # loss data print per epoch
+    loss_print_per_epoch = 1  # desired number of loss data print per epoch
     number_of_classes = 2     # OK.
     validation_on = True
     scheduler_on = True
@@ -214,5 +214,7 @@ if __name__ == "__main__":
             trained_model_path,
             output_dir)
 
+    if is_saving_output:
+        boundingbox.post_process(output_dir)
 
     print('Program Finished!')
