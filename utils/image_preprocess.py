@@ -9,10 +9,11 @@
 '''
 
 import os
+
 import cv2
 import numpy as np
-from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 
 #   Parses the line information txt and later puts them into a dict in the

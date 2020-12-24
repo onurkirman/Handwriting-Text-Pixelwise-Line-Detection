@@ -9,11 +9,12 @@
         - Overlaping and other issue like outputs are rooted to database. 
     
 '''
-import os
-import re
-import cv2
 import glob
+import os
 import random
+import re
+
+import cv2
 import numpy as np
 from tqdm import tqdm
 

@@ -60,11 +60,12 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, Dataset
 from torchsummary import summary
 
-from utils.image_preprocess import preprocess_logic
+import boundingbox
 from DL_Utils import (FormDS, Test, Train, Validation, build_model, load_data,
                       plt_images, save_output_batch, save_predictions,
                       torch_loader, undo_preprocess)
-import boundingbox
+from utils.image_preprocess import preprocess_logic
+
 
 def process(epochs,
             batch_size,
