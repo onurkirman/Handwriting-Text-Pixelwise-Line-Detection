@@ -62,10 +62,10 @@ def post_process(prediction_folder):
     os.makedirs(saving_path_rect, exist_ok=True)
 
 
-    predictions = glob.glob('./' + prediction_folder + 'mask' + '/*.png')
+    predictions = glob.glob('./' + prediction_folder + '/mask' + '/*.png')
     predictions.sort(key=lambda f: int(re.sub('\D', '', f)))
 
-    inputs = glob.glob('./' + prediction_folder + 'form' + '/*.png')
+    inputs = glob.glob('./' + prediction_folder + '/form' + '/*.png')
     inputs.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     # Enables/Disables boinding-boxing the input image with colored rectangles
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     print(f"\'{script_name[-1].capitalize()}\' Started!")
 
     # folder name for raw form images
-    raw_data_folder = 'output'
+    raw_data_folder = 'output_combined_fixed'
 
     # post process
     post_process(raw_data_folder)
