@@ -97,7 +97,8 @@ def process(epochs,
     validation_data_loader = torch_loader(validation_path, number_of_classes, batch_size, augmentation=True)
 
     ## Peak a look at the dataset (forms, masks and their combination) ##
-    plt_images(train_data_loader.dataset.images[:batch_size], train_data_loader.dataset.masks[:batch_size], batch_size)
+    if sample_view:
+        plt_images(train_data_loader.dataset.images[:batch_size], train_data_loader.dataset.masks[:batch_size], batch_size)
 
 
     ## Built Model ##
@@ -177,14 +178,14 @@ if __name__ == "__main__":
     validation_on = True
     scheduler_on = True
     sample_view = False
-    is_saving_output = False
+    is_saving_output = True
 
     # CUDA for PyTorch
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.backends.cudnn.benchmark = True
 
     # Image Paths
-    data_dir = 'dataset_combined'
+    data_dir = 'dataset_combined_fixed'
     train_path = data_dir + '/train'
     test_path = data_dir + '/test'
     validation_path = data_dir + '/validation'
@@ -194,7 +195,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(os.getcwd(), trained_model_path.split("\\")[0]), exist_ok=True)
 
     # Directory for predictions
-    output_dir = 'output'
+    output_dir = 'output_combined_fixed'
 
     process(epochs,
             batch_size,
