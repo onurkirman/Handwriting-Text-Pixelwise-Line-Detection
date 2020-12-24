@@ -26,14 +26,18 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
 
 # Image Paths
-data_dir = 'dataset_combined'
+data_dir = 'dataset_combined_fixed'
 test_path = data_dir + '/test'
 
 # Trained Model Path
 trained_model_path = 'weight\\model_check_combined.pt'
 
+# Directory for predictions
+output_dir = 'test'
+
+
 # Test Dataset Loaded to Torch Here
-test_data_loader = torch_loader(test_path, number_of_classes, batch_size, augmentation=True)
+test_data_loader = torch_loader(test_path, number_of_classes, batch_size, augmentation=False)
 
 # Restore the model from "model_check.pt"
 model = model = build_model('unet', device, number_of_classes, dropout_rate)
@@ -43,6 +47,6 @@ model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('
 
 # Testing Process
 test = Test(test_data_loader, batch_size, device)
-test.start(model, is_saving_output, sample_view)
+test.start(model, is_saving_output, sample_view, output_dir)
 
 print("Program Finished!")
