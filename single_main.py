@@ -16,7 +16,7 @@
         dataset         -> folder that has the preprocessed images seperated as foldered below
             - train         -> images for training
                 - form                  -> preprocessed form images
-                - mask                  -> mask images that is a creation of preprocess using given line informations
+                - mask                  -> mask images that is a creation of preprocess using given line information
             - test          -> images for testing
                 - form
                 - mask
@@ -30,7 +30,7 @@
         output
             - rect                      -> Rectangle-Fitted tested form images
             - box_fitted                -> Bounding Box Created Over the Predictions
-            - form                      -> Form images in the dataset/test folder, saved again for easy use & comparison
+            - form                      -> Form images in the dataset/test folder with random transformations
             - mask                      -> Predictions/Outputs of the network
         output_batch -> (created, if requested, at the end of main.py to save the output batch) ->
         utils
