@@ -60,7 +60,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, Dataset
 from torchsummary import summary
 
-import boundingbox
+import utils.boundingbox as boundingbox
 from utils.DL_Utils import (FormDS, Test, Train, Validation, build_model,
                             load_data, plt_images, save_output_batch,
                             save_predictions, torch_loader, undo_preprocess)
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
     
     # Hyperparameters for Training & Testing
-    epochs = 8                # 4 predicts well, might be 2. 8 is the best
+    epochs = 1                # 4 predicts well, might be 2. 8 is the best
     batch_size = 4            # 4 is OK, might be 8 (exceed mem.)
     batch_extender = True     # Extends the batch so that training process done once in twice -> gives better result
     learning_rate = 1e-2      # 1e-3 is OK., 5e-4 also OK. 1e-2 is the best. (0.01 -> 0.001 -> 0.0005) LR Scheduler!

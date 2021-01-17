@@ -105,7 +105,7 @@ if __name__ == "__main__":
     print(f"\'{script_name[-1].capitalize()}\' Started!")
 
     # folder name for raw form images
-    raw_data_folder = 'output_combined_fixed'
+    raw_data_folder = 'output'
 
     # post process
     post_process(raw_data_folder)
