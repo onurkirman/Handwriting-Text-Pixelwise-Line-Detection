@@ -1,9 +1,8 @@
 ''' 
-    Onur Kirman S009958 Computer Science Undergrad at Ozyegin Universitys      
+    Onur Kirman S009958 Computer Science Undergrad at Ozyegin University     
 '''
 
 import torch
-
 from DL_Utils import (FormDS, Test, Train, Validation, build_model, load_data,
                       plt_images, save_output_batch, save_predictions,
                       torch_loader, undo_preprocess)
