@@ -110,7 +110,7 @@ def covert_images(folder_name, d, final_image_size):
         mask = downscale_image(mask, final_image_size, interpolation=cv2.INTER_NEAREST)
         masks.append(mask)
 
-        # winname = 'image'
+        # winname = filename
         # cv2.namedWindow(winname)        
         # cv2.moveWindow(winname, 400, 100)  
         # cv2.imshow(winname, img & mask)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     split_percentage = 0.2 # used for data split into two sub-parts
 
     # Dataset directory
-    dataset_folder_name = 'dataset_combined'
+    dataset_folder_name = 'dataset'
 
     # Logic Part of Pre-Process
     preprocess_logic(raw_data_folder,
