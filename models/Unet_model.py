@@ -16,9 +16,10 @@ Conclutions over the Tests being done:
 '''
 
 import torch
+from torch.nn import (BatchNorm2d, Conv2d, Dropout2d, LeakyReLU, MaxPool2d,
+                      Module, ReLU, Sequential, UpsamplingBilinear2d,
+                      UpsamplingNearest2d)
 from torchsummary import summary
-from torch.nn import Module, Sequential
-from torch.nn import Conv2d, BatchNorm2d, ReLU, LeakyReLU, Dropout2d, MaxPool2d, UpsamplingNearest2d, UpsamplingBilinear2d
 
 
 def conv_block(in_channel: int, out_channel: int, dropout_rate):
