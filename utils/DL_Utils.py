@@ -17,16 +17,15 @@ import torch
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms.functional as TF
+from models.CNN_network import Network
+from models.Unet_model import UnetModel
+from models.Unet_model_clipped import UnetModelClipped
 from PIL import Image, ImageOps
 from torch import nn, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data import DataLoader, Dataset
 from torchsummary import summary
 from torchvision import transforms
-
-from models.CNN_network import Network
-from models.Unet_model import UnetModel
-from models.Unet_model_clipped import UnetModelClipped
 
 
 # Plots the given batch in 3 rows; Raw, Mask, Bitwise_Anded
@@ -119,8 +118,8 @@ def load_data(dataset_path):
     mask_names.sort(key=lambda f: int(re.sub('\D', '', f)))
 
     for i, (form_name, mask_name) in enumerate(zip(form_names, mask_names)):
-        form = np.asarray(Image.open(form_name))
-        mask = np.asarray(Image.open(mask_name))
+        form = np.asarray(ImageOps.grayscale(Image.open(form_name)))
+        mask = np.asarray((Image.open(mask_name)))
 
         forms.append(form)
         masks.append(mask)
@@ -302,7 +301,10 @@ class Train:
         model.train()
         try:
             batch_step = 0
+            losses = []
             for epoch in range(epochs):
+                running_loss = 0.0
+                loss_step = []
                 for idx, (images, masks, _) in enumerate(self.data_loader, 1):
                     images = images.to(self.device)  # Sends to GPU
                     masks = masks.type(torch.LongTensor)
@@ -339,16 +341,28 @@ class Train:
                             model.train()
                         valstr = f'\tValid. Loss: {(validation_loss/length_validation):.4f}\tValid. Acc.: {validation_accuracy * 100:.3f}%' if validation_on else ''
                         print(f'Epoch: {epoch + 1}/{epochs}\tSt: {idx}/{total_steps}\tLast.Loss: {loss.item():4f}{valstr}')
+                    running_loss += loss.item() * images.size(0)
+                    if False: # Used for First Epoch
+                        loss_step.append(loss.item())
+                if False:
+                    plt.plot(loss_step)
+                    plt.show()
+                epoch_loss = running_loss / len(self.data_loader)
+                losses.append(epoch_loss)
                 if scheduler_on:
                     self.scheduler.step(acc) # -> ReduceLROnPlateau
 
                     # scheduler.step() # -> StepLR
                     # print(f'LR: {scheduler.get_last_lr()}')
+            print('Execution time:', '{:5.2f}'.format(timer() - start_time), 'seconds')
+            # plt.plot(losses)
+            # plt.show()
+            print(f"Overall Average Loss: {sum(losses)/len(losses)}")
+                
         
         except Exception as e:
             print(e)
 
-        print('Execution time:', '{:5.2f}'.format(timer() - start_time), 'seconds')
         return model
 
 
