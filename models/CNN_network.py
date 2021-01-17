@@ -1,7 +1,12 @@
+'''
+Written by Onur Kirman Computer Science Undergrad at Ozyegin University
+'''
+
 import torch
-from torch.nn import Module, Sequential
-from torch.nn import Conv2d, BatchNorm2d, ReLU, Dropout2d, MaxPool2d, UpsamplingNearest2d
+from torch.nn import (BatchNorm2d, Conv2d, Dropout2d, MaxPool2d, Module, ReLU,
+                      Sequential, UpsamplingNearest2d)
 from torchsummary import summary
+
 
 class Network(Module):
     def __init__(self, number_of_classes, dropout_rate):
@@ -55,8 +60,14 @@ class Network(Module):
         return y_pred
 
 if __name__ == "__main__":
-    number_of_classes = 2
+    print(f'Cuda Available: {torch.cuda.is_available()}')
+    print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
+    
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    model = Network(number_of_classes).to(device)
-    summary(model, input_size=(1,256,256))
+    number_of_classes = 2
+
+    print(f'Number of Classes: {number_of_classes}')
+
+    model = Network(number_of_classes, 0).to(device)
+    summary(model, input_size=(1,256,256))  # (channels, H, W)
