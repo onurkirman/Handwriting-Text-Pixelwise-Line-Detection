@@ -3,9 +3,10 @@
 '''
 
 import torch
-from DL_Utils import (FormDS, Test, Train, Validation, build_model, load_data,
+import utils.boundingbox as boundingbox
+from utils.DL_Utils import (FormDS, Test, Train, Validation, build_model, load_data,
                       plt_images, save_output_batch, save_predictions,
-                      torch_loader, undo_preprocess)
+                      torch_loader, undo_preprocess, plot_test_predictions)
 
 print("Test Started!")
 
@@ -25,14 +26,14 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
 
 # Image Paths
-data_dir = 'dataset_combined_fixed'
+data_dir = 'dataset'
 test_path = data_dir + '/test'
 
 # Trained Model Path
-trained_model_path = 'weight\\model_check_combined.pt'
+trained_model_path = 'weight\\model_check.pt'
 
 # Directory for predictions
-output_dir = 'test'
+output_dir = 'output_test'
 
 
 # Test Dataset Loaded to Torch Here
@@ -47,5 +48,12 @@ model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('
 # Testing Process
 test = Test(test_data_loader, batch_size, device)
 test.start(model, is_saving_output, sample_view, output_dir)
+
+# Post-Process Part
+if is_saving_output:
+    boundingbox.post_process(output_dir)
+
+# Presentation Demo Plot
+plot_test_predictions(output_dir, batch_size)
 
 print("Program Finished!")
