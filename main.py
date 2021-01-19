@@ -169,7 +169,7 @@ if __name__ == "__main__":
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
     
     # Hyperparameters for Training & Testing
-    epochs = 1                # 4 predicts well, might be 2. 8 is the best
+    epochs = 8                # 4 predicts well, might be 2. 8 is the best
     batch_size = 4            # 4 is OK, might be 8 (exceed mem.)
     batch_extender = True     # Extends the batch so that training process done once in twice -> gives better result
     learning_rate = 1e-2      # 1e-3 is OK., 5e-4 also OK. 1e-2 is the best. (0.01 -> 0.001 -> 0.0005) LR Scheduler!
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.backends.cudnn.benchmark = True
 
-    # Image Paths
+    # Image Paths for datasets
     data_dir = 'dataset'
     train_path = data_dir + '/train'
     test_path = data_dir + '/test'
@@ -196,8 +196,9 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(os.getcwd(), trained_model_path.split("\\")[0]), exist_ok=True)
 
     # Directory for predictions
-    output_dir = 'output'
+    output_dir = 'output_model'
 
+    # Main Process
     process(epochs,
             batch_size,
             batch_extender,
@@ -216,6 +217,7 @@ if __name__ == "__main__":
             trained_model_path,
             output_dir)
 
+    # Post-Process Part
     if is_saving_output:
         boundingbox.post_process(output_dir)
 
