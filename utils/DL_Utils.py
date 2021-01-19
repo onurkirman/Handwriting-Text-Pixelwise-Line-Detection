@@ -40,6 +40,47 @@ def plt_images(images, masks, batch_size):
     plt.show()
 
 
+# Plot for testing
+def plot_test_predictions(path, batch_size):
+    inputs = [] 
+    mask_preds = [] 
+    rects = []
+    
+    form_names = glob.glob('./' + path + '/form' + '/*.png')
+    form_names.sort(key=lambda f: int(re.sub('\D', '', f)))
+
+    mask_names = glob.glob('./' + path + '/mask' + '/*.png')
+    mask_names.sort(key=lambda f: int(re.sub('\D', '', f)))
+
+    rect_names = glob.glob('./' + path + '/rect' + '/*.png')
+    rect_names.sort(key=lambda f: int(re.sub('\D', '', f)))
+
+    print(len(rect_names))
+
+    for i, (form_name, mask_name, rect_name) in enumerate(zip(form_names, mask_names, rect_names)):
+        form = np.asarray(Image.open(form_name))
+        mask = np.asarray(Image.open(mask_name))
+        rect = np.asarray(Image.open(rect_name))
+
+        inputs.append(form)
+        mask_preds.append(mask)
+        rects.append(rect)
+    print(len(inputs))
+    print(len(inputs)/batch_size)
+
+    for i in range(int(len(inputs)/batch_size)):
+        temp(batch_size, inputs[0+4*i:4+4*i], mask_preds[0+4*i:4+4*i], rects[0+4*i:4+4*i])
+
+def temp(batch_size, inputs, mask_preds, rects):
+    fig, axs = plt.subplots(3, batch_size, figsize=(256,256))
+    for i in range(batch_size):
+        axs[0][i].imshow(inputs[i], cmap='gray')
+        axs[1][i].imshow(mask_preds[i], cmap='gray')
+        axs[2][i].imshow(rects[i], cmap='gray')
+    fig.suptitle("Top Row: raw images, Middle Row: mask prediction, Bottom Row: bounding boxes")
+    plt.show()
+
+
 # Returns the images and masks in the original format
 def undo_preprocess(images, predicts):
     x = []
