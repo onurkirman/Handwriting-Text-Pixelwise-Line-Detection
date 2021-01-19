@@ -37,7 +37,7 @@ output_dir = 'output_test'
 
 
 # Test Dataset Loaded to Torch Here
-test_data_loader = torch_loader(test_path, number_of_classes, batch_size, augmentation=False)
+test_data_loader = torch_loader(test_path, number_of_classes, batch_size)
 
 # Restore the model from "model_check.pt"
 model = model = build_model('unet', device, number_of_classes, dropout_rate)
