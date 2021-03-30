@@ -20,6 +20,7 @@ import torchvision.transforms.functional as TF
 from models.CNN_network import Network
 from models.Unet_model import UnetModel
 from models.Unet_model_clipped import UnetModelClipped
+from models.Attention_Unet import Attention_Unet
 from PIL import Image, ImageOps
 from torch import nn, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
@@ -269,6 +270,8 @@ def build_model(name, device, number_of_classes, dropout_rate=0):
         model = UnetModelClipped(number_of_classes, dropout_rate).to(device)
     elif name is 'network':
         model = Network(number_of_classes, dropout_rate).to(device)
+    elif name is 'att_unet':
+        model = Attention_Unet(number_of_classes, dropout_rate).to(device)
     else:
         sys.exit('You need to choose one network model that is being provided. Stopping...')
     return model
