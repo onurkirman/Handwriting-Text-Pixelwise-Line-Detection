@@ -83,6 +83,7 @@ def process(epochs,
             test_path,
             validation_path,
             trained_model_path,
+            model_name,
             output_dir):
 
     print('Process Started.')
@@ -103,7 +104,7 @@ def process(epochs,
 
 
     ## Built Model ##
-    model = build_model('unet', device, number_of_classes, dropout_rate)
+    model = build_model(model_name, device, number_of_classes, dropout_rate)
 
 
     ## Loss Function ##
@@ -136,7 +137,9 @@ def process(epochs,
     test_data_loader = torch_loader(test_path, number_of_classes, batch_size, augmentation=True)
     
     # Rebuild the model, before the restore
-    model = build_model('unet', device, number_of_classes, dropout_rate)
+    model = build_model(model_name, device, number_of_classes, dropout_rate)
+
+    # model = TransUnet(in_channels=1, img_dim=256, vit_blocks=8, vit_dim_linear_mhsa_block=512, classes=number_of_classes) 
 
     # Restore the model from "model_check.pt"
     # Load to CPU. Later it can be moved to GPU as needed
@@ -145,9 +148,13 @@ def process(epochs,
     test = Test(test_data_loader, batch_size, device)
     test.start(model, is_saving_output, sample_view, output_dir)
 
+
 if __name__ == "__main__":
+
+    print('Program Started!')
     
     # ### Preprocess Part ###
+    
     # # folder name for raw form images
     # raw_data_folder = 'data/forms/'
 
@@ -165,21 +172,23 @@ if __name__ == "__main__":
     #                 dataset_folder_name
     #                 )
     
-    print(f'Cuda Available: {torch.cuda.is_available()}')
+    print(f'Cuda Available: { "Yes" if torch.cuda.is_available() else "No"}') # 'Yes' if torch.cuda.is_available() else 'No'}'
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
     
     # Hyperparameters for Training & Testing
     epochs = 8                # 4 predicts well, might be 2. 8 is the best
-    batch_size = 4            # 4 is OK, might be 8 (exceed mem.)
+    batch_size = 2            # 4 is OK, might be 8 (exceed mem.)
     batch_extender = True     # Extends the batch so that training process done once in twice -> gives better result
     learning_rate = 1e-2      # 1e-3 is OK., 5e-4 also OK. 1e-2 is the best. (0.01 -> 0.001 -> 0.0005) LR Scheduler!
     dropout_rate = 0.0        # 0.2 is nice with big train data
     loss_print_per_epoch = 1  # desired number of loss data print per epoch
     number_of_classes = 2     # OK.
     validation_on = True
-    scheduler_on = False
+    scheduler_on = True
     sample_view = False
     is_saving_output = True
+
+    model_name = 'att_unet'
 
     # CUDA for PyTorch
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -192,11 +201,11 @@ if __name__ == "__main__":
     validation_path = data_dir + '/validation'
 
     # Trained Model Path
-    trained_model_path = 'weight\\model_check.pt'
+    trained_model_path = 'weight\\model_check_'+ model_name +'.pt'
     os.makedirs(os.path.join(os.getcwd(), trained_model_path.split("\\")[0]), exist_ok=True)
 
     # Directory for predictions
-    output_dir = 'output_model'
+    output_dir = 'output_' + model_name
 
     # Main Process
     process(epochs,
@@ -215,6 +224,7 @@ if __name__ == "__main__":
             test_path,
             validation_path,
             trained_model_path,
+            model_name,
             output_dir)
 
     # Post-Process Part
