@@ -17,10 +17,10 @@ import torch
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms.functional as TF
+from models.Attention_Unet import Attention_Unet
 from models.CNN_network import Network
 from models.Unet_model import UnetModel
 from models.Unet_model_clipped import UnetModelClipped
-from models.Attention_Unet import Attention_Unet
 from PIL import Image, ImageOps
 from torch import nn, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR

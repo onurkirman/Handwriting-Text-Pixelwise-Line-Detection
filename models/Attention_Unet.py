@@ -1,24 +1,11 @@
 '''
 Written by Onur Kirman Computer Science Undergrad at Ozyegin University
-Ref: U-Net: Convolutional Networks for Biomedical Image Segmentation [https://arxiv.org/abs/1505.04597]
-
-Notes about network hyperparameters & layers:
-
-- 'MaxPool2d' with (2,2) shrinks size by half in both dimensions.
--  UpsamplingNearest2d scale_factor of 2, just doubles the size.
-- 'padding = 1' -> helps to keep the size of our input while conv.(3,3).
-
-Conclutions over the Tests being done: 
-- 'ReLu' gives better results than 'LeakyReLU'.
-- 'Dropout' decreases accuracy on small datasets, like ours. 
-- 'BatchNorm' increses accuracy. Also, it helps the neurons to better understand and converge.
-- 'UpsamplingNearest2d' is better than 'UpsamplingBilinear2d' in pixelwise line seperations. 
 '''
 
 import torch
 from torch.nn import (BatchNorm2d, Conv2d, Dropout2d, LeakyReLU, MaxPool2d,
-                      Module, ReLU, Sequential, UpsamplingBilinear2d,
-                      UpsamplingNearest2d, Sigmoid, Upsample)
+                      Module, ReLU, Sequential, Sigmoid, Upsample,
+                      UpsamplingBilinear2d, UpsamplingNearest2d)
 from torchsummary import summary
 
 
