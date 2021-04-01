@@ -153,24 +153,24 @@ if __name__ == "__main__":
 
     print('Program Started!')
     
-    # ### Preprocess Part ###
+    ### Preprocess Part ###
     
-    # # folder name for raw form images
-    # raw_data_folder = 'data/forms/'
+    # folder name for raw form images
+    raw_data_folder = 'data/forms/'
 
-    # # Hyperparameters
-    # final_image_size = (256, 256)
-    # split_percentage = 0.2 # used for data split into two sub-parts
+    # Hyperparameters
+    final_image_size = (256, 256)
+    split_percentage = 0.2 # used for data split into two sub-parts
 
-    # # Dataset directory
-    # dataset_folder_name = 'dataset_combined'
+    # Dataset directory
+    dataset_folder_name = 'dataset_combined'
 
-    # # Logic Part of Pre-Process
-    # preprocess_logic(raw_data_folder,
-    #                 final_image_size,
-    #                 split_percentage,
-    #                 dataset_folder_name
-    #                 )
+    # Logic Part of Pre-Process
+    preprocess_logic(raw_data_folder,
+                    final_image_size,
+                    split_percentage,
+                    dataset_folder_name
+                    )
     
     print(f'Cuda Available: { "Yes" if torch.cuda.is_available() else "No"}') # 'Yes' if torch.cuda.is_available() else 'No'}'
     print(f'{"Cuda Device Name: " + torch.cuda.get_device_name(torch.cuda.current_device()) if torch.cuda.is_available() else "No Cuda Device Found"}')
