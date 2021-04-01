@@ -139,8 +139,6 @@ def process(epochs,
     # Rebuild the model, before the restore
     model = build_model(model_name, device, number_of_classes, dropout_rate)
 
-    # model = TransUnet(in_channels=1, img_dim=256, vit_blocks=8, vit_dim_linear_mhsa_block=512, classes=number_of_classes) 
-
     # Restore the model from "model_check.pt"
     # Load to CPU. Later it can be moved to GPU as needed
     model.load_state_dict(torch.load(trained_model_path, map_location=torch.device('cpu')))
